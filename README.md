@@ -1,4 +1,4 @@
 wordament
 =========
 
-Implementation of the popular word game Wordament
+Implementation of the popular word game Wordament in Python.
