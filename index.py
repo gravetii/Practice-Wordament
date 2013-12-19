@@ -84,8 +84,7 @@ def get_neighbors(point):
     pre_list = [(x-1,y-1), (x-1,y), (x-1,y+1), (x,y-1), (x,y+1), (x+1,y-1), (x+1,y), (x+1,y+1)]
     post_list = []
     for neighbor in pre_list:
-        if neighbor[0] < 0 or neighbor[0] < 0 or neighbor[0] > 3 or neighbor[0] > 3 or \
-        neighbor[1] < 0 or neighbor[1] < 0 or neighbor[1] > 3 or neighbor[1] > 3: continue
+        if neighbor[0] < 0 or neighbor[0] > 3 or neighbor[1] < 0 or neighbor[1] > 3: continue
         else: post_list.append(neighbor)
     return post_list
 
