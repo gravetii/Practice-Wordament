@@ -85,7 +85,7 @@ def get_neighbors(point):
     post_list = []
     for neighbor in pre_list:
         if neighbor[0] < 0 or neighbor[0] > 3 or neighbor[1] < 0 or neighbor[1] > 3: continue
-        else: post_list.append(neighbor)
+        post_list.append(neighbor)
     return post_list
 
 def find_words(point, prefix, visited, total_points):
