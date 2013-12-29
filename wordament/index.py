@@ -1,12 +1,7 @@
-import time
 import sys
-from pytrie import StringTrie as trie
 import cPickle as pickle
-import string
 import random
-from random import randint
-from PyQt4 import QtGui, QtCore
-import utils
+from PyQt4 import QtGui
 from utils import alphabet
 
 MIN_LENGTH = 3
