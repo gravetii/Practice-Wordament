@@ -6,7 +6,8 @@ from utils import alphabet
 
 MIN_LENGTH = 3
 T = None
-grid = [['' for row in range(4)] for col in range(4)]
+grid = [[None for row in range(4)] for col in range(4)]
+ 
 grid_words_list = None
 
 class Window(QtGui.QWidget):
@@ -20,8 +21,7 @@ class Window(QtGui.QWidget):
         for row in range(4):
             for col in range(4):
                 label = QtGui.QLabel(self)
-                letter = alphabet.Alphabet(random.choice(alphabet._alphabet))
-                grid[row][col] = letter.letter
+                letter = grid[row][col]
                 pixmap = QtGui.QPixmap(letter.image)
                 label.setPixmap(pixmap.scaled(100, 100))
                 layout.addWidget(label, row, col)
@@ -65,12 +65,12 @@ def get_neighbors(point):
 
 def find_words(point, prefix, visited, total_points):
     visited[point[0]][point[1]] = True
-    word = prefix + grid[point[0]][point[1]]
+    word = prefix + grid[point[0]][point[1]].letter
     if not is_prefix(word):
         return
     if len(word) >= MIN_LENGTH and is_word(word) and word not in grid_words_list:
         grid_words_list.append(word)
-    total_points[word] = total_points[prefix] + total_points[grid[point[0]][point[1]]]
+    total_points[word] = total_points[prefix] + total_points[grid[point[0]][point[1]].letter]
     for neighbor in get_neighbors(point):
         if not visited[neighbor[0]][neighbor[1]]:
             _visited = [[False for r in range(4)] for c in range(4)]
@@ -80,6 +80,12 @@ def find_words(point, prefix, visited, total_points):
             find_words(neighbor, word, _visited, total_points)
 
 def main():
+    global grid
+    for r in range(4):
+        for c in range(4):
+            random_letter = random.choice(alphabet._alphabet)
+            letter = alphabet.Alphabet(random_letter)
+            grid[r][c] = letter
     '''create the UI here'''
     app = QtGui.QApplication(sys.argv)
     window = Window()
