@@ -1,0 +1,5 @@
+Things to do:
+
+- Extend the QtGui.QMainWindow instead of the QtGui.QWidget
+- Use the horizontal/vertical layout provided by QMainWindow
+- Create the menu and status bar
