@@ -32,10 +32,10 @@ _points = {'': 0,
           'es':12,
           'pr':6, }
 
-_alphabet = ['b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'p', 'q', 'r', 't'] * 6 + \
+_alphabet = ['b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'p', 'q', 'r', 't'] * 9 + \
             ['s'] * 10 + \
             ['a', 'e', 'i', 'o', 'u'] * 20 + \
-            ['v', 'w', 'x', 'y', 'z'] * 3
+            ['v', 'w', 'x', 'y', 'z'] * 6
 
 class Alphabet(object):
     def __init__(self, letter):

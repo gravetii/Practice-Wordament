@@ -1,7 +1,7 @@
 import sys
 import cPickle as pickle
 import random
-from PyQt4 import QtGui
+from PyQt4 import QtGui, QtCore
 from threading import Thread
 from utils import alphabet
 
@@ -30,15 +30,36 @@ class Window(QtGui.QWidget):
         self.resultbox = QtGui.QTextEdit(self)
         self.resultbox.setReadOnly(True)
         self.btn = QtGui.QPushButton('Send', self)
-        self.btn.clicked.connect(self.printResult)
+        self.btn.clicked.connect(self.print_result)
         layout.addWidget(self.textbox, 5, 0, 1, 3)
         layout.addWidget(self.resultbox, 6, 0, 3, 3)
         layout.addWidget(self.btn, 5, 3)
-        
-    def printResult(self, event):
+
+    def print_result(self, event):
         text = str(self.textbox.text())
         self.textbox.clear()
         if text in grid_words_list:
+            self.resultbox.append(text + ': ' + str(total_points[text]))
+            print text
+            
+    def confirm_exit(self):
+        dialog = QtGui.QMessageBox.question(self, 'Really quit?', 'Are you sure you want to quit?',
+                                buttons = QtGui.QMessageBox.Yes|QtGui.QMessageBox.No)
+        if dialog == QtGui.QMessageBox.Yes:
+            self.destroy()
+        elif dialog == QtGui.QMessageBox.No:
+            return
+        
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_Escape:
+            self.confirm_exit()
+            return
+
+        if event.key() == QtCore.Qt.Key_Enter or event.key() == QtCore.Qt.Key_Return:
+            text = str(self.textbox.text())
+            self.textbox.clear()
+            if text is None or text not in grid_words_list:
+                return
             self.resultbox.append(text + ': ' + str(total_points[text]))
             print text
         
