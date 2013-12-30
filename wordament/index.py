@@ -2,6 +2,7 @@ import sys
 import cPickle as pickle
 import random
 from PyQt4 import QtGui
+from threading import Thread
 from utils import alphabet
 
 MIN_LENGTH = 3
@@ -79,6 +80,18 @@ def find_words(point, prefix, visited, total_points):
                     _visited[p][q] = visited[p][q]
             find_words(neighbor, word, _visited, total_points)
 
+
+class InitThread(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+    
+    def run(self):
+        create_trie()
+        global grid_words_list
+        grid_words_list = []
+        global total_points
+        total_points = alphabet._points
+
 def main():
     global grid
     for r in range(4):
@@ -90,12 +103,11 @@ def main():
     app = QtGui.QApplication(sys.argv)
     window = Window()
     window.show()
-    create_trie()
-    global grid_words_list
-    grid_words_list = []
-    global total_points
-    total_points = alphabet._points
 
+    init_thread = InitThread()
+    init_thread.start()
+    init_thread.join()
+    
     print 'trie created'
     for i in range(4):
         for j in range(4):
