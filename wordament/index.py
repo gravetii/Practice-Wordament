@@ -11,14 +11,18 @@ grid = [[None for row in range(4)] for col in range(4)]
  
 grid_words_list = None
 
-class Window(QtGui.QWidget):
+class Window(QtGui.QMainWindow):
     def __init__(self):
-        super(Window, self).__init__()
+        QtGui.QMainWindow.__init__(self)
         self.initUI()
         self.move(300, 150)
+        self.statusbar = self.statusBar()
+        self.statusbar.showMessage('WORDAMENT!')
+        self.setWindowTitle('WORDAMENT')
 
     def initUI(self):
-        layout = QtGui.QGridLayout(self)
+        self.main_widget = QtGui.QWidget() 
+        layout = QtGui.QGridLayout()
         for row in range(4):
             for col in range(4):
                 label = QtGui.QLabel(self)
@@ -34,6 +38,8 @@ class Window(QtGui.QWidget):
         layout.addWidget(self.textbox, 5, 0, 1, 3)
         layout.addWidget(self.resultbox, 6, 0, 3, 3)
         layout.addWidget(self.btn, 5, 3)
+        self.main_widget.setLayout(layout)
+        self.setCentralWidget(self.main_widget)
 
     def print_result(self, event):
         text = str(self.textbox.text())
@@ -46,7 +52,7 @@ class Window(QtGui.QWidget):
         dialog = QtGui.QMessageBox.question(self, 'Really quit?', 'Are you sure you want to quit?',
                                 buttons = QtGui.QMessageBox.Yes|QtGui.QMessageBox.No)
         if dialog == QtGui.QMessageBox.Yes:
-            self.destroy()
+            self.close()
         elif dialog == QtGui.QMessageBox.No:
             return
         
@@ -100,7 +106,6 @@ def find_words(point, prefix, visited, total_points):
                 for q in range(4):
                     _visited[p][q] = visited[p][q]
             find_words(neighbor, word, _visited, total_points)
-
 
 class InitThread(Thread):
     def __init__(self):
