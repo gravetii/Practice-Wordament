@@ -8,7 +8,6 @@ from utils import alphabet
 MIN_LENGTH = 3
 T = None
 grid = [[None for row in range(4)] for col in range(4)]
- 
 grid_words_list = None
 
 class Window(QtGui.QMainWindow):
@@ -64,7 +63,7 @@ class Window(QtGui.QMainWindow):
         text = str(self.textbox.text())
         self.textbox.clear()
         if text in grid_words_list:
-            self.resultbox.append(text + ': ' + str(total_points[text]))
+            self.resultbox.append(text + ': ' + str(grid_words_list[text]))
             print text
             
     def confirm_exit(self):
@@ -115,9 +114,9 @@ def find_words(point, prefix, visited, total_points):
     word = prefix + grid[point[0]][point[1]].letter
     if not is_prefix(word):
         return
+    total_points[word] = total_points[prefix] + total_points[grid[point[0]][point[1]].letter]
     if len(word) >= MIN_LENGTH and is_word(word) and word not in grid_words_list:
         grid_words_list.append(word)
-    total_points[word] = total_points[prefix] + total_points[grid[point[0]][point[1]].letter]
     for neighbor in get_neighbors(point):
         if not visited[neighbor[0]][neighbor[1]]:
             _visited = [[False for r in range(4)] for c in range(4)]
@@ -125,6 +124,12 @@ def find_words(point, prefix, visited, total_points):
                 for q in range(4):
                     _visited[p][q] = visited[p][q]
             find_words(neighbor, word, _visited, total_points)
+
+def get_grid_all():
+    sum_total_points = 0
+    for each_word in grid_words_list:
+        sum_total_points += total_points[each_word]
+    return (len(grid_words_list), grid_words_list, sum_total_points)
 
 class InitThread(Thread):
     def __init__(self):
@@ -155,8 +160,11 @@ def main():
         for j in range(4):
             visited = [[False for p in range(4)] for q in range(4)]
             find_words((i, j), '', visited, total_points)
-    print grid_words_list
-    print len(grid_words_list)
+    
+    result_list = get_grid_all()
+    print 'Total number of words: ' + str(result_list[0])
+    print 'Words List: ' + str(result_list[1])
+    print 'Total sum of grid words: ' + str(result_list[2])
     
     '''create the UI here'''
     app = QtGui.QApplication(sys.argv)
