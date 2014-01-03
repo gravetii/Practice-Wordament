@@ -14,11 +14,13 @@ grid_words_list = None
 class Window(QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
+        self.create_menu()
         self.initUI()
         self.move(300, 150)
         self.statusbar = self.statusBar()
         self.statusbar.showMessage('WORDAMENT!')
         self.setWindowTitle('WORDAMENT')
+        self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
 
     def initUI(self):
         self.main_widget = QtGui.QWidget() 
@@ -40,6 +42,23 @@ class Window(QtGui.QMainWindow):
         layout.addWidget(self.btn, 5, 3)
         self.main_widget.setLayout(layout)
         self.setCentralWidget(self.main_widget)
+        
+    def create_menu(self):
+        new_game_action = QtGui.QAction('&New Game', self)
+        new_game_action.setShortcut('Ctrl+N')
+        new_game_action.triggered.connect(self.create_new_game)
+        
+        exit_action = QtGui.QAction('&Exit', self)
+        exit_action.setShortcut('Ctrl+Q')
+        exit_action.triggered.connect(self.confirm_exit)
+        
+        menubar = self.menuBar()
+        file_menu = menubar.addMenu('&File')
+        file_menu.addAction(new_game_action)
+        file_menu.addAction(exit_action)
+
+    def create_new_game(self):
+        print 'creating new game'
 
     def print_result(self, event):
         text = str(self.textbox.text())
@@ -119,17 +138,14 @@ class InitThread(Thread):
         total_points = alphabet._points
 
 def main():
+    
     global grid
     for r in range(4):
         for c in range(4):
             random_letter = random.choice(alphabet._alphabet)
             letter = alphabet.Alphabet(random_letter)
             grid[r][c] = letter
-    '''create the UI here'''
-    app = QtGui.QApplication(sys.argv)
-    window = Window()
-    window.show()
-
+    
     init_thread = InitThread()
     init_thread.start()
     init_thread.join()
@@ -141,6 +157,11 @@ def main():
             find_words((i, j), '', visited, total_points)
     print grid_words_list
     print len(grid_words_list)
+    
+    '''create the UI here'''
+    app = QtGui.QApplication(sys.argv)
+    window = Window()
+    window.show()
     sys.exit(app.exec_())
 
 if __name__ == '__main__': main()
