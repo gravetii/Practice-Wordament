@@ -63,7 +63,7 @@ class Window(QtGui.QMainWindow):
         text = str(self.textbox.text())
         self.textbox.clear()
         if text in grid_words_list:
-            self.resultbox.append(text + ': ' + str(grid_words_list[text]))
+            self.resultbox.append(text + ': ' + str(total_points[text]))
             print text
             
     def confirm_exit(self):
