@@ -10,6 +10,8 @@ T = None
 grid = [[None for row in range(4)] for col in range(4)]
 grid_words_list = None
 
+user_words_list = None
+
 class Window(QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
@@ -60,11 +62,22 @@ class Window(QtGui.QMainWindow):
         print 'creating new game'
 
     def print_result(self, event):
-        text = str(self.textbox.text())
+        text = str(self.textbox.text()).strip()
         self.textbox.clear()
-        if text in grid_words_list:
-            self.resultbox.append(text + ': ' + str(total_points[text]))
+        if text == '': return
+        if text in grid_words_list and text not in user_words_list:
+            result_string = text + ': ' + str(total_points[text]) + '\n'
+            formatted_string = QtCore.QString("<font color='green'>%1</font>").arg(result_string)
+            self.resultbox.insertHtml(formatted_string)
+            self.resultbox.insertPlainText('\n')
+            user_words_list.append(text)
             print text
+        elif text in user_words_list:
+            self.resultbox.insertHtml(QtCore.QString("<font color='orange'>%1</font>").arg(text))
+            self.resultbox.insertPlainText('\n')
+        elif text not in grid_words_list:
+            self.resultbox.insertHtml(QtCore.QString("<font color='red'>%1</font>").arg(text))
+            self.resultbox.insertPlainText('\n')
             
     def confirm_exit(self):
         dialog = QtGui.QMessageBox.question(self, 'Really quit?', 'Are you sure you want to quit?',
@@ -80,12 +93,8 @@ class Window(QtGui.QMainWindow):
             return
 
         if event.key() == QtCore.Qt.Key_Enter or event.key() == QtCore.Qt.Key_Return:
-            text = str(self.textbox.text())
-            self.textbox.clear()
-            if text is None or text not in grid_words_list:
-                return
-            self.resultbox.append(text + ': ' + str(total_points[text]))
-            print text
+            self.print_result(event)
+            return
         
 def create_trie():
     global T
@@ -158,7 +167,7 @@ def main():
     print 'trie created'
     for i in range(4):
         for j in range(4):
-            visited = [[False for p in range(4)] for q in range(4)]
+            visited = [[False for r in range(4)] for c in range(4)]
             find_words((i, j), '', visited, total_points)
     
     result_list = get_grid_all()
@@ -166,6 +175,8 @@ def main():
     print 'Words List: ' + str(result_list[1])
     print 'Total sum of grid words: ' + str(result_list[2])
     
+    global user_words_list
+    user_words_list = []
     '''create the UI here'''
     app = QtGui.QApplication(sys.argv)
     window = Window()
