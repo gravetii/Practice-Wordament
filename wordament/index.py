@@ -66,7 +66,7 @@ class Window(QtGui.QMainWindow):
         self.textbox.clear()
         if text == '': return
         if text in grid_words_list and text not in user_words_list:
-            result_string = text + ': ' + str(total_points[text]) + '\n'
+            result_string = text + ': ' + str(total_points[text])
             formatted_string = QtCore.QString("<font color='green'>%1</font>").arg(result_string)
             self.resultbox.insertHtml(formatted_string)
             self.resultbox.insertPlainText('\n')
