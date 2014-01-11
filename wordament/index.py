@@ -10,6 +10,10 @@ T = None
 grid = [[None for row in range(4)] for col in range(4)]
 grid_words_list = None
 user_words_list = None
+total_points = None
+
+'''flag to check if a game is running or not'''
+IS_GAME_RUNNING = False
 
 class Window(QtGui.QMainWindow):
     def __init__(self):
@@ -52,6 +56,7 @@ class Window(QtGui.QMainWindow):
         layout.addWidget(self.btn, 5, 3)
         self.main_widget.setLayout(layout)
         self.setCentralWidget(self.main_widget)
+        self.textbox.setFocus()
 
     def create_menu(self):
         new_game_action = QtGui.QAction('&New Game', self)
@@ -60,18 +65,52 @@ class Window(QtGui.QMainWindow):
         
         exit_action = QtGui.QAction('&Exit', self)
         exit_action.setShortcut('Ctrl+Q')
-        exit_action.triggered.connect(self.confirm_exit)
+        exit_action.triggered.connect(self.close)
         
+        about_action = QtGui.QAction('&About', self)
+        about_action.triggered.connect(self.show_about)
+
         menubar = self.menuBar()
         file_menu = menubar.addMenu('&File')
         file_menu.addAction(new_game_action)
         file_menu.addAction(exit_action)
+        help_menu = menubar.addMenu('&Help')
+        help_menu.addAction(about_action)
 
     def create_new_game(self):
-        print 'creating new game'
-        self.gameUI()
+        if self.is_game_running():
+            dialog = QtGui.QMessageBox.question(self, 'Really quit?',
+                                                'Are you sure you want to quit this game and start a new one?',
+                                buttons = QtGui.QMessageBox.Yes|QtGui.QMessageBox.No)
+            if dialog == QtGui.QMessageBox.No:
+                return
+        
+        '''create a random grid'''
+        create_random_grid()
 
-    def print_result(self, event):
+        global user_words_list
+        user_words_list = []
+        global total_points
+        total_points = alphabet._points
+        global grid_words_list
+        grid_words_list = []
+
+        '''now get the list of words etc. for this grid'''
+        get_all_grid_words()
+
+        result_list = get_grid_all()
+        print 'Total number of words: ' + str(result_list[0])
+        print 'Words List: ' + str(result_list[1])
+        print 'Total sum of grid words: ' + str(result_list[2])
+        self.set_game_running(True)
+        self.gameUI()
+    
+    def show_about(self):
+        dialog_text = 'Written by Sandeep Dasika in a desperate attempt to do something productive.'
+        dialog = QtGui.QMessageBox.information(self, "About", dialog_text, 
+                                    buttons=QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
+
+    def print_result(self):
         text = str(self.textbox.text()).strip()
         self.textbox.clear()
         if text == '': return
@@ -94,24 +133,35 @@ class Window(QtGui.QMainWindow):
         elif text not in grid_words_list:
             self.resultbox.insertHtml(QtCore.QString("<font color='red'>%1</font>").arg(text))
             self.resultbox.insertPlainText('\n')
-            
-    def confirm_exit(self):
-        dialog = QtGui.QMessageBox.question(self, 'Really quit?', 'Are you sure you want to quit?',
-                                buttons = QtGui.QMessageBox.Yes|QtGui.QMessageBox.No)
-        if dialog == QtGui.QMessageBox.Yes:
-            self.close()
-        elif dialog == QtGui.QMessageBox.No:
-            return
-        
+
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
-            self.confirm_exit()
-            return
+            self.close()
 
         if event.key() == QtCore.Qt.Key_Enter or event.key() == QtCore.Qt.Key_Return:
-            self.print_result(event)
+            self.print_result()
             return
+
+    def set_game_running(self, flag):
+        global IS_GAME_RUNNING
+        IS_GAME_RUNNING = flag
         
+    def is_game_running(self):
+        return IS_GAME_RUNNING
+    
+    def closeEvent(self, event):
+        if self.is_game_running():
+            dialog_text = 'Really quit?', 'Quit current game?'
+        else:
+            dialog_text = 'Really exit?', 'Are you sure you want to exit?'
+        dialog = QtGui.QMessageBox.question(self, dialog_text[0], dialog_text[1],
+                                buttons = QtGui.QMessageBox.Yes|QtGui.QMessageBox.No)
+        if dialog == QtGui.QMessageBox.Yes:
+            event.accept()
+        elif dialog == QtGui.QMessageBox.No:
+            event.ignore()
+            return
+
 def create_trie():
     global T
     if T is None:
@@ -157,6 +207,7 @@ def get_all_grid_words():
             global total_points
             find_words((i, j), '', visited, total_points)
 
+'''this function will just create the grid 2-d array'''
 def create_random_grid():
     global grid
     for r in range(4):
@@ -177,29 +228,13 @@ class InitThread(Thread):
     
     def run(self):
         create_trie()
-        global grid_words_list
-        grid_words_list = []
-        global total_points
-        total_points = alphabet._points
 
 def main():
-    create_random_grid()
     init_thread = InitThread()
     init_thread.start()
     init_thread.join()
     
     print 'trie created'
-    
-    get_all_grid_words()
-    result_list = get_grid_all()
-    print 'Total number of words: ' + str(result_list[0])
-    print 'Words List: ' + str(result_list[1])
-    print 'Total sum of grid words: ' + str(result_list[2])
-    
-    global user_words_list
-    user_words_list = []
-
-    '''create the UI here'''
     app = QtGui.QApplication(sys.argv)
     window = Window()
     window.show()
