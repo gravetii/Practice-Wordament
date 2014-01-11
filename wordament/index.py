@@ -65,6 +65,12 @@ class Window(QtGui.QMainWindow):
         text = str(self.textbox.text()).strip()
         self.textbox.clear()
         if text == '': return
+        
+        '''move cursor to the beginning of self.resultbox'''
+        cursor = self.resultbox.textCursor()
+        cursor.movePosition(QtGui.QTextCursor.Start)
+        self.resultbox.setTextCursor(cursor)
+
         if text in grid_words_list and text not in user_words_list:
             result_string = text + ': ' + str(total_points[text])
             formatted_string = QtCore.QString("<font color='green'>%1</font>").arg(result_string)
@@ -78,12 +84,6 @@ class Window(QtGui.QMainWindow):
         elif text not in grid_words_list:
             self.resultbox.insertHtml(QtCore.QString("<font color='red'>%1</font>").arg(text))
             self.resultbox.insertPlainText('\n')
-            
-        '''move cursor to the beginning of self.resultbox'''
-        cursor = self.resultbox.textCursor()
-        cursor.movePosition(QtGui.QTextCursor.Start)
-        self.resultbox.setTextCursor(cursor)
-        self.resultbox.ensureCursorVisible()
             
     def confirm_exit(self):
         dialog = QtGui.QMessageBox.question(self, 'Really quit?', 'Are you sure you want to quit?',
@@ -140,6 +140,21 @@ def find_words(point, prefix, visited, total_points):
                     _visited[p][q] = visited[p][q]
             find_words(neighbor, word, _visited, total_points)
 
+def get_all_grid_words():
+    for i in range(4):
+        for j in range(4):
+            visited = [[False for r in range(4)] for c in range(4)]
+            global total_points
+            find_words((i, j), '', visited, total_points)
+
+def create_random_grid():
+    global grid
+    for r in range(4):
+        for c in range(4):
+            random_letter = random.choice(alphabet._alphabet)
+            letter = alphabet.Alphabet(random_letter)
+            grid[r][c] = letter
+
 def get_grid_all():
     sum_total_points = 0
     for each_word in grid_words_list:
@@ -157,21 +172,9 @@ class InitThread(Thread):
         global total_points
         total_points = alphabet._points
 
-def get_all_grid_words():
-    for i in range(4):
-        for j in range(4):
-            visited = [[False for r in range(4)] for c in range(4)]
-            global total_points
-            find_words((i, j), '', visited, total_points)
-
 def main():
-    global grid
-    for r in range(4):
-        for c in range(4):
-            random_letter = random.choice(alphabet._alphabet)
-            letter = alphabet.Alphabet(random_letter)
-            grid[r][c] = letter
-    
+    create_random_grid()
+
     init_thread = InitThread()
     init_thread.start()
     init_thread.join()
