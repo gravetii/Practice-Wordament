@@ -109,7 +109,7 @@ def create_trie():
         T = pickle.load(trie_read)
 
 def is_word(word):
-    return T.longest_prefix(word) == word
+    return T.longest_prefix(word, False) == word
 
 def is_prefix(prefix):
     a = T.keys(prefix = prefix)
