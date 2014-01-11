@@ -63,14 +63,11 @@ class Window(QtGui.QMainWindow):
         new_game_action = QtGui.QAction('&New Game', self)
         new_game_action.setShortcut('Ctrl+N')
         new_game_action.triggered.connect(self.create_new_game)
-        
         exit_action = QtGui.QAction('&Exit', self)
         exit_action.setShortcut('Ctrl+Q')
         exit_action.triggered.connect(self.close)
-        
         about_action = QtGui.QAction('&About', self)
         about_action.triggered.connect(self.show_about)
-
         menubar = self.menuBar()
         file_menu = menubar.addMenu('&File')
         file_menu.addAction(new_game_action)
@@ -85,8 +82,7 @@ class Window(QtGui.QMainWindow):
                                 buttons = QtGui.QMessageBox.Yes|QtGui.QMessageBox.No)
             if dialog == QtGui.QMessageBox.No:
                 return
-        
-        '''create a random grid'''
+
         create_random_grid()
 
         global user_words_list
@@ -99,7 +95,7 @@ class Window(QtGui.QMainWindow):
         if trie_thread.is_alive():
             trie_thread.join()
 
-        '''now get the list of words etc. for this grid'''
+        '''get the list of meaningful words from this grid'''
         get_all_grid_words()
 
         result_list = get_grid_all()
@@ -119,7 +115,7 @@ class Window(QtGui.QMainWindow):
         self.textbox.clear()
         if text == '': return
         
-        '''move cursor to the beginning of self.resultbox'''
+        '''move cursor to the beginning of resultbox'''
         cursor = self.resultbox.textCursor()
         cursor.movePosition(QtGui.QTextCursor.Start)
         self.resultbox.setTextCursor(cursor)
@@ -166,6 +162,16 @@ class Window(QtGui.QMainWindow):
             event.ignore()
             return
 
+class TrieThread(Thread):
+    def __init__(self, name):
+        Thread.__init__(self, name=name)
+    
+    def run(self):
+        global T
+        if T is None:
+            trie_read = open('utils/trie_dump.pkl', 'r+')
+            T = pickle.load(trie_read)
+        print 'trie created'
 
 def is_word(word):
     return T.longest_prefix(word, False) == word
@@ -199,14 +205,6 @@ def find_words(point, prefix, visited, total_points):
                     _visited[p][q] = visited[p][q]
             find_words(neighbor, word, _visited, total_points)
 
-def get_all_grid_words():
-    for i in range(4):
-        for j in range(4):
-            visited = [[False for r in range(4)] for c in range(4)]
-            global total_points
-            find_words((i, j), '', visited, total_points)
-
-'''this function will just create the grid 2-d array'''
 def create_random_grid():
     global grid
     for r in range(4):
@@ -215,22 +213,18 @@ def create_random_grid():
             letter = alphabet.Alphabet(random_letter)
             grid[r][c] = letter
 
+def get_all_grid_words():
+    for i in range(4):
+        for j in range(4):
+            visited = [[False for r in range(4)] for c in range(4)]
+            global total_points
+            find_words((i, j), '', visited, total_points)
+
 def get_grid_all():
     sum_total_points = 0
     for each_word in grid_words_list:
         sum_total_points += total_points[each_word]
     return (len(grid_words_list), grid_words_list, sum_total_points)
-
-class TrieThread(Thread):
-    def __init__(self, name):
-        Thread.__init__(self, name=name)
-    
-    def run(self):
-        global T
-        if T is None:
-            trie_read = open('utils/trie_dump.pkl', 'r+')
-            T = pickle.load(trie_read)
-        print 'trie created'
 
 def main():
     global trie_thread
