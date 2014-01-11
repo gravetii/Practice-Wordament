@@ -11,6 +11,7 @@ grid = [[None for row in range(4)] for col in range(4)]
 grid_words_list = None
 user_words_list = None
 total_points = None
+trie_thread = None
 
 '''flag to check if a game is running or not'''
 IS_GAME_RUNNING = False
@@ -80,7 +81,7 @@ class Window(QtGui.QMainWindow):
     def create_new_game(self):
         if self.is_game_running():
             dialog = QtGui.QMessageBox.question(self, 'Really quit?',
-                                                'Are you sure you want to quit this game and start a new one?',
+                                                'Quit this game and start a new one?',
                                 buttons = QtGui.QMessageBox.Yes|QtGui.QMessageBox.No)
             if dialog == QtGui.QMessageBox.No:
                 return
@@ -94,6 +95,9 @@ class Window(QtGui.QMainWindow):
         total_points = alphabet._points
         global grid_words_list
         grid_words_list = []
+        
+        if trie_thread.is_alive():
+            trie_thread.join()
 
         '''now get the list of words etc. for this grid'''
         get_all_grid_words()
@@ -162,11 +166,6 @@ class Window(QtGui.QMainWindow):
             event.ignore()
             return
 
-def create_trie():
-    global T
-    if T is None:
-        trie_read = open('utils/trie_dump.pkl', 'r+')
-        T = pickle.load(trie_read)
 
 def is_word(word):
     return T.longest_prefix(word, False) == word
@@ -222,19 +221,21 @@ def get_grid_all():
         sum_total_points += total_points[each_word]
     return (len(grid_words_list), grid_words_list, sum_total_points)
 
-class InitThread(Thread):
-    def __init__(self):
-        Thread.__init__(self)
+class TrieThread(Thread):
+    def __init__(self, name):
+        Thread.__init__(self, name=name)
     
     def run(self):
-        create_trie()
+        global T
+        if T is None:
+            trie_read = open('utils/trie_dump.pkl', 'r+')
+            T = pickle.load(trie_read)
+        print 'trie created'
 
 def main():
-    init_thread = InitThread()
-    init_thread.start()
-    init_thread.join()
-    
-    print 'trie created'
+    global trie_thread
+    trie_thread = TrieThread('trie loading thread')
+    trie_thread.start()
     app = QtGui.QApplication(sys.argv)
     window = Window()
     window.show()
