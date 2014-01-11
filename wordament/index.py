@@ -151,8 +151,14 @@ class InitThread(Thread):
         global total_points
         total_points = alphabet._points
 
+def get_all_grid_words():
+    for i in range(4):
+        for j in range(4):
+            visited = [[False for r in range(4)] for c in range(4)]
+            global total_points
+            find_words((i, j), '', visited, total_points)
+
 def main():
-    
     global grid
     for r in range(4):
         for c in range(4):
@@ -165,11 +171,8 @@ def main():
     init_thread.join()
     
     print 'trie created'
-    for i in range(4):
-        for j in range(4):
-            visited = [[False for r in range(4)] for c in range(4)]
-            find_words((i, j), '', visited, total_points)
     
+    get_all_grid_words()
     result_list = get_grid_all()
     print 'Total number of words: ' + str(result_list[0])
     print 'Words List: ' + str(result_list[1])
@@ -177,6 +180,7 @@ def main():
     
     global user_words_list
     user_words_list = []
+
     '''create the UI here'''
     app = QtGui.QApplication(sys.argv)
     window = Window()
