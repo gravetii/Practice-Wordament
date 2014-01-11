@@ -17,14 +17,15 @@ class Window(QtGui.QMainWindow):
         QtGui.QMainWindow.__init__(self)
         self.create_menu()
         self.initUI()
-        self.move(300, 150)
+        self.move(350, 100)
+        self.setFixedSize(425, 575)
         self.statusbar = self.statusBar()
         self.statusbar.showMessage('WORDAMENT!')
         self.setWindowTitle('WORDAMENT')
         self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
 
     def initUI(self):
-        self.main_widget = QtGui.QWidget() 
+        self.main_widget = QtGui.QWidget()
         layout = QtGui.QGridLayout()
         for row in range(4):
             for col in range(4):
