@@ -9,7 +9,6 @@ MIN_LENGTH = 3
 T = None
 grid = [[None for row in range(4)] for col in range(4)]
 grid_words_list = None
-
 user_words_list = None
 
 class Window(QtGui.QMainWindow):
@@ -25,6 +24,15 @@ class Window(QtGui.QMainWindow):
         self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
 
     def initUI(self):
+        layout = QtGui.QBoxLayout(0)
+        pixmap = QtGui.QPixmap('utils/images/skins/index.jpg')
+        self.label = QtGui.QLabel(self)
+        self.label.setPixmap(pixmap.scaled(425, 575))
+        layout.addWidget(self.label)
+        self.setCentralWidget(self.label)
+        self.setFixedSize(425, 575)
+
+    def gameUI(self):
         self.main_widget = QtGui.QWidget()
         layout = QtGui.QGridLayout()
         for row in range(4):
@@ -44,7 +52,7 @@ class Window(QtGui.QMainWindow):
         layout.addWidget(self.btn, 5, 3)
         self.main_widget.setLayout(layout)
         self.setCentralWidget(self.main_widget)
-        
+
     def create_menu(self):
         new_game_action = QtGui.QAction('&New Game', self)
         new_game_action.setShortcut('Ctrl+N')
@@ -61,6 +69,7 @@ class Window(QtGui.QMainWindow):
 
     def create_new_game(self):
         print 'creating new game'
+        self.gameUI()
 
     def print_result(self, event):
         text = str(self.textbox.text()).strip()
@@ -175,7 +184,6 @@ class InitThread(Thread):
 
 def main():
     create_random_grid()
-
     init_thread = InitThread()
     init_thread.start()
     init_thread.join()
