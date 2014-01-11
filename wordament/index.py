@@ -79,6 +79,12 @@ class Window(QtGui.QMainWindow):
             self.resultbox.insertHtml(QtCore.QString("<font color='red'>%1</font>").arg(text))
             self.resultbox.insertPlainText('\n')
             
+        '''move cursor to the beginning of self.resultbox'''
+        cursor = self.resultbox.textCursor()
+        cursor.movePosition(QtGui.QTextCursor.Start)
+        self.resultbox.setTextCursor(cursor)
+        self.resultbox.ensureCursorVisible()
+            
     def confirm_exit(self):
         dialog = QtGui.QMessageBox.question(self, 'Really quit?', 'Are you sure you want to quit?',
                                 buttons = QtGui.QMessageBox.Yes|QtGui.QMessageBox.No)
