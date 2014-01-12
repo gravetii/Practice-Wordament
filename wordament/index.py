@@ -1,4 +1,5 @@
 import sys
+import time
 import cPickle as pickle
 import random
 from PyQt4 import QtGui, QtCore
@@ -12,10 +13,17 @@ grid_words_list = None
 user_words_list = None
 total_points = None
 trie_thread = None
+qtimer = QtCore.QTimer()
 
 '''flag to check if a game is running or not'''
 IS_GAME_RUNNING = False
+CURRENT_GAME_ID = 0
 
+'''this represents a Timer class'''
+class Timer():
+    def __init__(self, game_id):
+        self.game_id = game_id
+        QtCore.QTimer.singleShot(60000, self.stop_game)
 class Window(QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
@@ -38,6 +46,7 @@ class Window(QtGui.QMainWindow):
         self.setFixedSize(425, 575)
 
     def gameUI(self):
+        self.statusbar.clearMessage()
         self.main_widget = QtGui.QWidget()
         layout = QtGui.QGridLayout()
         for row in range(4):
@@ -58,6 +67,34 @@ class Window(QtGui.QMainWindow):
         self.main_widget.setLayout(layout)
         self.setCentralWidget(self.main_widget)
         self.textbox.setFocus()
+        
+        '''allow the user to play the game for 1 minute'''
+        global qtimer
+        qtimer.singleShot(60000, self.stop_game)
+        print 'TIMER STARTED NOW...'
+
+    def stop_game(self):
+        self.set_game_running(False)
+        print 'TIME UP!'
+        self.textbox.setReadOnly(True)
+        self.statusbar.showMessage('TIME UP!')
+        '''wait for 2 seconds immediately after the game ends before displaying result to user'''
+        time.sleep(2)
+        self.display_user_result()
+    
+    def display_user_result(self):
+        user_words_score = 0
+        global user_words_list
+        for word in user_words_list:
+            user_words_score += total_points[word]
+        user_words_count = str(len(user_words_list))
+        grid_result = get_grid_all()
+        text_1 = '- Total words: ' + str(user_words_count) + ' out of ' + grid_result[0]
+        text_2 = '- Total score: ' + str(user_words_score) + ' out of ' + grid_result[2]
+        dialog = QtGui.QMessageBox.information(self, 'Game over!', text_1 + '\n' + text_2,  
+                                    buttons = QtGui.QMessageBox.Ok)
+        if dialog == QtGui.QMessageBox.Ok:
+            return
 
     def create_menu(self):
         new_game_action = QtGui.QAction('&New Game', self)
@@ -82,7 +119,6 @@ class Window(QtGui.QMainWindow):
                                 buttons = QtGui.QMessageBox.Yes|QtGui.QMessageBox.No)
             if dialog == QtGui.QMessageBox.No:
                 return
-
         create_random_grid()
 
         global user_words_list
@@ -99,16 +135,22 @@ class Window(QtGui.QMainWindow):
         get_all_grid_words()
 
         result_list = get_grid_all()
-        print 'Total number of words: ' + str(result_list[0])
-        print 'Words List: ' + str(result_list[1])
-        print 'Total sum of grid words: ' + str(result_list[2])
+        print 'Total number of words: ' + result_list[0]
+        print 'Words List: ' + result_list[1]
+        print 'Total sum of grid words: ' + result_list[2]
         self.set_game_running(True)
+        self.statusbar.showMessage('starting new game...')
+        
+        '''wait for 1 seconds before showing the grid to the user'''
+        time.sleep(1)
         self.gameUI()
     
     def show_about(self):
         dialog_text = 'Written by Sandeep Dasika in a desperate attempt to do something productive.'
         dialog = QtGui.QMessageBox.information(self, "About", dialog_text, 
                                     buttons=QtGui.QMessageBox.Ok, defaultButton=QtGui.QMessageBox.Ok)
+        if dialog == QtGui.QMessageBox.Ok:
+            return
 
     def print_result(self):
         text = str(self.textbox.text()).strip()
@@ -224,7 +266,7 @@ def get_grid_all():
     sum_total_points = 0
     for each_word in grid_words_list:
         sum_total_points += total_points[each_word]
-    return (len(grid_words_list), grid_words_list, sum_total_points)
+    return (str(len(grid_words_list)), str(grid_words_list), str(sum_total_points))
 
 def main():
     global trie_thread
