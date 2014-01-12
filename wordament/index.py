@@ -44,7 +44,6 @@ class Window(QtGui.QMainWindow):
         self.label.setPixmap(pixmap.scaled(425, 575))
         layout.addWidget(self.label)
         self.setCentralWidget(self.label)
-        self.setFixedSize(425, 575)
 
     def gameUI(self):
         self.statusbar.clearMessage()
