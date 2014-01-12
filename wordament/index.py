@@ -38,7 +38,8 @@ class Window(QtGui.QMainWindow):
 
     def initUI(self):
         layout = QtGui.QBoxLayout(0)
-        pixmap = QtGui.QPixmap('utils/images/skins/index.jpg')
+        skin_path = 'utils/images/skins/' + str(random.choice([1, 2, 3])) + '.jpg'
+        pixmap = QtGui.QPixmap(skin_path)
         self.label = QtGui.QLabel(self)
         self.label.setPixmap(pixmap.scaled(425, 575))
         layout.addWidget(self.label)
@@ -139,7 +140,7 @@ class Window(QtGui.QMainWindow):
         print 'Words List: ' + result_list[1]
         print 'Total sum of grid words: ' + result_list[2]
         self.set_game_running(True)
-        self.statusbar.showMessage('starting new game...')
+        self.statusbar.showMessage('Starting new game...')
         
         '''wait for 1 seconds before showing the grid to the user'''
         time.sleep(1)
@@ -153,6 +154,7 @@ class Window(QtGui.QMainWindow):
             return
 
     def print_result(self):
+        if not self.is_game_running(): return
         text = str(self.textbox.text()).strip()
         self.textbox.clear()
         if text == '': return
