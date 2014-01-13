@@ -18,6 +18,7 @@ UNIT_GAME_TIME = 60
 '''flag to check if a game is running or not'''
 IS_GAME_RUNNING = False
 
+
 class Window(QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
@@ -120,6 +121,7 @@ class Window(QtGui.QMainWindow):
                                 buttons = QtGui.QMessageBox.Yes|QtGui.QMessageBox.No)
             if dialog == QtGui.QMessageBox.No:
                 return
+
         create_random_grid()
 
         global user_words_list
