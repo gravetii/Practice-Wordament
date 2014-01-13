@@ -91,10 +91,9 @@ class Window(QtGui.QMainWindow):
         grid_result = get_grid_all()
         text_1 = '- Total words: ' + str(user_words_count) + ' out of ' + grid_result[0]
         text_2 = '- Total score: ' + str(user_words_score) + ' out of ' + grid_result[2]
-        dialog = QtGui.QMessageBox.information(self, 'Game over!', text_1 + '\n' + text_2,  
-                                    buttons = QtGui.QMessageBox.Ok)
-        if dialog == QtGui.QMessageBox.Ok:
-            return
+        dialog = QtGui.QMessageBox.information(self, 'Game over!', text_1 + '\n' + text_2 + '\n\nStart new game?',  
+                                    buttons = QtGui.QMessageBox.Yes|QtGui.QMessageBox.No)
+        if dialog == QtGui.QMessageBox.Yes: self.create_new_game()
 
     def create_menu(self):
         new_game_action = QtGui.QAction('&New Game', self)
@@ -153,8 +152,7 @@ class Window(QtGui.QMainWindow):
             return
 
     def print_result(self):
-        if not self.is_game_running(): return
-        text = str(self.textbox.text()).strip()
+        text = str(self.textbox.text()).strip().lower()
         self.textbox.clear()
         if text == '': return
         
@@ -181,9 +179,8 @@ class Window(QtGui.QMainWindow):
         if event.key() == QtCore.Qt.Key_Escape:
             self.close()
 
-        if event.key() == QtCore.Qt.Key_Enter or event.key() == QtCore.Qt.Key_Return:
+        if event.key() == QtCore.Qt.Key_Enter or event.key() == QtCore.Qt.Key_Return and self.is_game_running():
             self.print_result()
-            return
 
     def set_game_running(self, flag):
         global IS_GAME_RUNNING
