@@ -13,17 +13,11 @@ grid_words_list = None
 user_words_list = None
 total_points = None
 trie_thread = None
-qtimer = QtCore.QTimer()
+UNIT_GAME_TIME = 60
 
 '''flag to check if a game is running or not'''
 IS_GAME_RUNNING = False
-CURRENT_GAME_ID = 0
 
-'''this represents a Timer class'''
-class Timer():
-    def __init__(self, game_id):
-        self.game_id = game_id
-        QtCore.QTimer.singleShot(60000, self.stop_game)
 class Window(QtGui.QMainWindow):
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
@@ -35,6 +29,8 @@ class Window(QtGui.QMainWindow):
         self.statusbar.showMessage('WORDAMENT!')
         self.setWindowTitle('WORDAMENT')
         self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
+        self.current_timer = None
+        print 'self.current_timer initialized to None'
 
     def initUI(self):
         layout = QtGui.QBoxLayout(0)
@@ -69,9 +65,17 @@ class Window(QtGui.QMainWindow):
         self.textbox.setFocus()
         
         '''allow the user to play the game for 1 minute'''
-        global qtimer
-        qtimer.singleShot(60000, self.stop_game)
-        print 'TIMER STARTED NOW...'
+        #global current_timer
+        self.start_timer()
+    
+    def start_timer(self):
+        if self.current_timer:
+            self.current_timer.stop()
+            self.current_timer.deleteLater()
+        self.current_timer = QtCore.QTimer()
+        self.current_timer.timeout.connect(self.stop_game)
+        self.current_timer.setSingleShot(True) 
+        self.current_timer.start(1000 * UNIT_GAME_TIME)
 
     def stop_game(self):
         self.set_game_running(False)
