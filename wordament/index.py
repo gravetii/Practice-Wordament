@@ -30,7 +30,6 @@ class Window(QtGui.QMainWindow):
         self.setWindowTitle('WORDAMENT')
         self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
         self.current_timer = None
-        print 'self.current_timer initialized to None'
 
     def initUI(self):
         layout = QtGui.QBoxLayout(0)
@@ -65,7 +64,6 @@ class Window(QtGui.QMainWindow):
         self.textbox.setFocus()
         
         '''allow the user to play the game for 1 minute'''
-        #global current_timer
         self.start_timer()
     
     def start_timer(self):
