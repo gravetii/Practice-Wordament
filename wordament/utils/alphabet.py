@@ -1,6 +1,6 @@
-from PyQt4 import QtGui, QtCore
-import random
-from random import randint
+#from PyQt4 import QtGui, QtCore
+#import random
+#from random import randint
 
 
 _points = {'': 0,

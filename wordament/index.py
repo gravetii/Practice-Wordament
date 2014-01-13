@@ -13,7 +13,7 @@ grid_words_list = None
 user_words_list = None
 total_points = None
 trie_thread = None
-UNIT_GAME_TIME = 60
+UNIT_GAME_TIME = 2
 
 '''flag to check if a game is running or not'''
 IS_GAME_RUNNING = False
@@ -95,7 +95,7 @@ class Window(QtGui.QMainWindow):
         text_1 = '- Total words: ' + str(user_words_count) + ' out of ' + grid_result[0]
         text_2 = '- Total score: ' + str(user_words_score) + ' out of ' + grid_result[2]
         dialog = QtGui.QMessageBox.information(self, 'Game over!', text_1 + '\n' + text_2 + '\n\nStart new game?',  
-                                    buttons = QtGui.QMessageBox.Yes|QtGui.QMessageBox.No)
+                                    buttons = QtGui.QMessageBox.Yes|QtGui.QMessageBox.No, defaultButton=QtGui.QMessageBox.No)
         if dialog == QtGui.QMessageBox.Yes: self.create_new_game()
 
     def create_menu(self):
