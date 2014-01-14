@@ -9,9 +9,9 @@ from utils import alphabet
 MIN_LENGTH = 3
 T = None
 grid = [[None for row in range(4)] for col in range(4)]
-grid_words_list = None
-user_words_list = None
-total_points = None
+grid_words_list = []
+user_words_list = []
+total_points = {}
 trie_thread = None
 UNIT_GAME_TIME = 60
 
@@ -127,16 +127,8 @@ class Window(QtGui.QMainWindow):
                                 buttons = QtGui.QMessageBox.Yes|QtGui.QMessageBox.No)
             if dialog == QtGui.QMessageBox.No:
                 return
-
+        self.init_game()
         create_random_grid()
-
-        global user_words_list
-        user_words_list = []
-        global total_points
-        total_points = alphabet._points
-        global grid_words_list
-        grid_words_list = []
-        
         if trie_thread.is_alive():
             trie_thread.join()
 
@@ -150,9 +142,15 @@ class Window(QtGui.QMainWindow):
         self.set_game_running(True)
         self.statusbar.showMessage('Starting new game...')
         
-        '''wait for 1 seconds before showing the grid to the user'''
+        '''wait for 1 second before showing the grid to the user'''
         time.sleep(1)
         self.gameUI()
+    
+    def init_game(self):
+        del user_words_list[:]
+        del grid_words_list[:]
+        total_points.clear()
+        total_points[''] = 0
     
     def show_about(self):
         dialog_text = 'Written by Sandeep Dasika in a desperate attempt to do something productive.'
@@ -222,6 +220,7 @@ class TrieThread(Thread):
             trie_read = open('utils/trie_dump.pkl', 'r+')
             T = pickle.load(trie_read)
         print 'trie created'
+        trie_read.close()
 
 def is_word(word):
     return T.longest_prefix(word, False) == word
@@ -262,6 +261,7 @@ def create_random_grid():
             random_letter = random.choice(alphabet._alphabet)
             letter = alphabet.Alphabet(random_letter)
             grid[r][c] = letter
+            total_points[random_letter] = letter.points
 
 def get_all_grid_words():
     for i in range(4):
