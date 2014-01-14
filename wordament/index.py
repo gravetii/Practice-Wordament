@@ -2,7 +2,7 @@ import sys
 import time
 import cPickle as pickle
 import random
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui, QtCore, phonon
 from threading import Thread
 from utils import alphabet
 
@@ -13,23 +13,17 @@ grid_words_list = None
 user_words_list = None
 total_points = None
 trie_thread = None
-UNIT_GAME_TIME = 2
+UNIT_GAME_TIME = 60
 
 '''flag to check if a game is running or not'''
 IS_GAME_RUNNING = False
 
-
 class Window(QtGui.QMainWindow):
     def __init__(self):
-        QtGui.QMainWindow.__init__(self)
+        super(Window, self).__init__()
         self.create_menu()
         self.initUI()
-        self.move(350, 100)
-        self.setFixedSize(425, 575)
-        self.statusbar = self.statusBar()
-        self.statusbar.showMessage('WORDAMENT!')
-        self.setWindowTitle('WORDAMENT')
-        self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
+        self.initPhonon()
         self.current_timer = None
 
     def initUI(self):
@@ -40,6 +34,17 @@ class Window(QtGui.QMainWindow):
         self.label.setPixmap(pixmap.scaled(425, 575))
         layout.addWidget(self.label)
         self.setCentralWidget(self.label)
+        self.move(350, 100)
+        self.setFixedSize(425, 575)
+        self.statusbar = self.statusBar()
+        self.statusbar.showMessage('WORDAMENT!')
+        self.setWindowTitle('WORDAMENT')
+        self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
+    
+    def initPhonon(self):
+        self.mediaObject = phonon.Phonon.MediaObject(self)
+        self._audioOutput = phonon.Phonon.AudioOutput(phonon.Phonon.MusicCategory)
+        phonon.Phonon.createPath(self.mediaObject, self._audioOutput)
 
     def gameUI(self):
         self.statusbar.clearMessage()
@@ -63,8 +68,7 @@ class Window(QtGui.QMainWindow):
         self.main_widget.setLayout(layout)
         self.setCentralWidget(self.main_widget)
         self.textbox.setFocus()
-        
-        '''allow the user to play the game for 1 minute'''
+        '''allow the user to play the game for UNIT_GAME_TIME seconds'''
         self.start_timer()
     
     def start_timer(self):
@@ -77,12 +81,12 @@ class Window(QtGui.QMainWindow):
         self.current_timer.start(1000 * UNIT_GAME_TIME)
 
     def stop_game(self):
+        self.mediaObject.setCurrentSource(phonon.Phonon.MediaSource('utils/sounds/alarm.wav'))
+        self.mediaObject.play()
         self.set_game_running(False)
         print 'TIME UP!'
         self.textbox.setReadOnly(True)
         self.statusbar.showMessage('TIME UP!')
-        '''wait for 2 seconds immediately after the game ends before displaying result to user'''
-        time.sleep(2)
         self.display_user_result()
     
     def display_user_result(self):
@@ -92,11 +96,13 @@ class Window(QtGui.QMainWindow):
             user_words_score += total_points[word]
         user_words_count = str(len(user_words_list))
         grid_result = get_grid_all()
-        text_1 = '- Total words: ' + str(user_words_count) + ' out of ' + grid_result[0]
-        text_2 = '- Total score: ' + str(user_words_score) + ' out of ' + grid_result[2]
-        dialog = QtGui.QMessageBox.information(self, 'Game over!', text_1 + '\n' + text_2 + '\n\nStart new game?',  
-                                    buttons = QtGui.QMessageBox.Yes|QtGui.QMessageBox.No, defaultButton=QtGui.QMessageBox.No)
-        if dialog == QtGui.QMessageBox.Yes: self.create_new_game()
+        text_1 = 'TOTAL WORDS - ' + str(user_words_count) + ' out of ' + grid_result[0]
+        text_2 = 'TOTAL SCORE - ' + str(user_words_score) + ' out of ' + grid_result[2]
+        
+        dialog = QtGui.QMessageBox.information(self, 'Game over!', 'TIME UP!', 
+                                    buttons = QtGui.QMessageBox.Ok|QtGui.QMessageBox.Cancel)
+        if dialog == QtGui.QMessageBox.Ok or dialog == QtGui.QMessageBox.Cancel:
+            self.statusbar.showMessage(text_1 + ' | ' + text_2)
 
     def create_menu(self):
         new_game_action = QtGui.QAction('&New Game', self)
