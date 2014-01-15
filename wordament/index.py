@@ -8,11 +8,6 @@ from utils import alphabet
 
 MIN_LENGTH = 3
 T = None
-grid = [[None for row in range(4)] for col in range(4)]
-grid_words_list = []
-user_words_list = []
-total_points = {}
-trie_thread = None
 UNIT_GAME_TIME = 60
 
 '''flag to check if a game is running or not'''
@@ -24,6 +19,7 @@ class Window(QtGui.QMainWindow):
         self.create_menu()
         self.initUI()
         self.initPhonon()
+        self.initAll()
         self.current_timer = None
 
     def initUI(self):
@@ -45,6 +41,12 @@ class Window(QtGui.QMainWindow):
         self.mediaObject = phonon.Phonon.MediaObject(self)
         self._audioOutput = phonon.Phonon.AudioOutput(phonon.Phonon.MusicCategory)
         phonon.Phonon.createPath(self.mediaObject, self._audioOutput)
+        
+    def initAll(self):
+        self.grid = [[None for row in range(4)] for col in range(4)]
+        self.grid_words_list = []
+        self.user_words_list = []
+        self.total_points = {'':0, }
 
     def gameUI(self):
         self.statusbar.clearMessage()
@@ -53,7 +55,7 @@ class Window(QtGui.QMainWindow):
         for row in range(4):
             for col in range(4):
                 label = QtGui.QLabel(self)
-                letter = grid[row][col]
+                letter = self.grid[row][col]
                 pixmap = QtGui.QPixmap(letter.image)
                 label.setPixmap(pixmap.scaled(100, 100))
                 layout.addWidget(label, row, col)
@@ -91,11 +93,10 @@ class Window(QtGui.QMainWindow):
     
     def display_user_result(self):
         user_words_score = 0
-        global user_words_list
-        for word in user_words_list:
-            user_words_score += total_points[word]
-        user_words_count = str(len(user_words_list))
-        grid_result = get_grid_all()
+        for word in self.user_words_list:
+            user_words_score += self.total_points[word]
+        user_words_count = str(len(self.user_words_list))
+        grid_result = self.get_grid_all()
         text_1 = 'TOTAL WORDS - ' + str(user_words_count) + ' out of ' + grid_result[0]
         text_2 = 'TOTAL SCORE - ' + str(user_words_score) + ' out of ' + grid_result[2]
         
@@ -127,15 +128,16 @@ class Window(QtGui.QMainWindow):
                                 buttons = QtGui.QMessageBox.Yes|QtGui.QMessageBox.No)
             if dialog == QtGui.QMessageBox.No:
                 return
-        self.init_game()
-        create_random_grid()
+
+        self.initAll()
+        self.create_random_grid()
         if trie_thread.is_alive():
             trie_thread.join()
 
         '''get the list of meaningful words from this grid'''
-        get_all_grid_words()
+        self.get_all_grid_words()
 
-        result_list = get_grid_all()
+        result_list = self.get_grid_all()
         print 'Total number of words: ' + result_list[0]
         print 'Words List: ' + result_list[1]
         print 'Total sum of grid words: ' + result_list[2]
@@ -145,12 +147,6 @@ class Window(QtGui.QMainWindow):
         '''wait for 1 second before showing the grid to the user'''
         time.sleep(1)
         self.gameUI()
-    
-    def init_game(self):
-        del user_words_list[:]
-        del grid_words_list[:]
-        total_points.clear()
-        total_points[''] = 0
     
     def show_about(self):
         dialog_text = 'Written by Sandeep Dasika in a desperate attempt to do something productive.'
@@ -169,17 +165,17 @@ class Window(QtGui.QMainWindow):
         cursor.movePosition(QtGui.QTextCursor.Start)
         self.resultbox.setTextCursor(cursor)
 
-        if text in grid_words_list and text not in user_words_list:
-            result_string = text + ': ' + str(total_points[text])
+        if text in self.grid_words_list and text not in self.user_words_list:
+            result_string = text + ': ' + str(self.total_points[text])
             formatted_string = QtCore.QString("<font color='green'>%1</font>").arg(result_string)
             self.resultbox.insertHtml(formatted_string)
             self.resultbox.insertPlainText('\n')
-            user_words_list.append(text)
+            self.user_words_list.append(text)
             print text
-        elif text in user_words_list:
+        elif text in self.user_words_list:
             self.resultbox.insertHtml(QtCore.QString("<font color='orange'>%1</font>").arg(text))
             self.resultbox.insertPlainText('\n')
-        elif text not in grid_words_list:
+        elif text not in self.grid_words_list:
             self.resultbox.insertHtml(QtCore.QString("<font color='red'>%1</font>").arg(text))
             self.resultbox.insertPlainText('\n')
 
@@ -209,6 +205,59 @@ class Window(QtGui.QMainWindow):
         elif dialog == QtGui.QMessageBox.No:
             event.ignore()
             return
+        
+    def is_word(self, word):
+        global T
+        return T.longest_prefix(word, False) == word
+    
+    def is_prefix(self, prefix):
+        a = T.keys(prefix = prefix)
+        return len(a) is not 0
+    
+    def get_neighbors(self, point):
+        (x, y) = (point[0], point[1])
+        pre_list = [(x-1,y-1), (x-1,y), (x-1,y+1), (x,y-1), (x,y+1), (x+1,y-1), (x+1,y), (x+1,y+1)]
+        post_list = []
+        for neighbor in pre_list:
+            if neighbor[0] < 0 or neighbor[0] > 3 or neighbor[1] < 0 or neighbor[1] > 3: continue
+            post_list.append(neighbor)
+        return post_list
+    
+    def find_words(self, point, prefix, visited, total_points):
+        visited[point[0]][point[1]] = True
+        word = prefix + self.grid[point[0]][point[1]].letter
+        if not self.is_prefix(word):
+            return
+        total_points[word] = total_points[prefix] + total_points[self.grid[point[0]][point[1]].letter]
+        if len(word) >= MIN_LENGTH and self.is_word(word) and word not in self.grid_words_list:
+            self.grid_words_list.append(word)
+        for neighbor in self.get_neighbors(point):
+            if not visited[neighbor[0]][neighbor[1]]:
+                _visited = [[False for r in range(4)] for c in range(4)]
+                for p in range(4):
+                    for q in range(4):
+                        _visited[p][q] = visited[p][q]
+                self.find_words(neighbor, word, _visited, total_points)
+                
+    def create_random_grid(self):
+        for r in range(4):
+            for c in range(4):
+                random_letter = random.choice(alphabet._alphabet)
+                letter = alphabet.Alphabet(random_letter)
+                self.grid[r][c] = letter
+                self.total_points[random_letter] = letter.points
+
+    def get_all_grid_words(self):
+        for i in range(4):
+            for j in range(4):
+                visited = [[False for r in range(4)] for c in range(4)]
+                self.find_words((i, j), '', visited, self.total_points)
+
+    def get_grid_all(self):
+        sum_total_points = 0
+        for each_word in self.grid_words_list:
+            sum_total_points += self.total_points[each_word]
+        return (str(len(self.grid_words_list)), str(self.grid_words_list), str(sum_total_points))
 
 class TrieThread(Thread):
     def __init__(self, name):
@@ -221,60 +270,6 @@ class TrieThread(Thread):
             T = pickle.load(trie_read)
         print 'trie created'
         trie_read.close()
-
-def is_word(word):
-    return T.longest_prefix(word, False) == word
-
-def is_prefix(prefix):
-    a = T.keys(prefix = prefix)
-    return len(a) is not 0
-
-def get_neighbors(point):
-    (x, y) = (point[0], point[1])
-    pre_list = [(x-1,y-1), (x-1,y), (x-1,y+1), (x,y-1), (x,y+1), (x+1,y-1), (x+1,y), (x+1,y+1)]
-    post_list = []
-    for neighbor in pre_list:
-        if neighbor[0] < 0 or neighbor[0] > 3 or neighbor[1] < 0 or neighbor[1] > 3: continue
-        post_list.append(neighbor)
-    return post_list
-
-def find_words(point, prefix, visited, total_points):
-    visited[point[0]][point[1]] = True
-    word = prefix + grid[point[0]][point[1]].letter
-    if not is_prefix(word):
-        return
-    total_points[word] = total_points[prefix] + total_points[grid[point[0]][point[1]].letter]
-    if len(word) >= MIN_LENGTH and is_word(word) and word not in grid_words_list:
-        grid_words_list.append(word)
-    for neighbor in get_neighbors(point):
-        if not visited[neighbor[0]][neighbor[1]]:
-            _visited = [[False for r in range(4)] for c in range(4)]
-            for p in range(4):
-                for q in range(4):
-                    _visited[p][q] = visited[p][q]
-            find_words(neighbor, word, _visited, total_points)
-
-def create_random_grid():
-    global grid
-    for r in range(4):
-        for c in range(4):
-            random_letter = random.choice(alphabet._alphabet)
-            letter = alphabet.Alphabet(random_letter)
-            grid[r][c] = letter
-            total_points[random_letter] = letter.points
-
-def get_all_grid_words():
-    for i in range(4):
-        for j in range(4):
-            visited = [[False for r in range(4)] for c in range(4)]
-            global total_points
-            find_words((i, j), '', visited, total_points)
-
-def get_grid_all():
-    sum_total_points = 0
-    for each_word in grid_words_list:
-        sum_total_points += total_points[each_word]
-    return (str(len(grid_words_list)), str(grid_words_list), str(sum_total_points))
 
 def main():
     global trie_thread
