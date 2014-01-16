@@ -8,7 +8,7 @@ from utils import alphabet
 
 MIN_LENGTH = 3
 T = None
-UNIT_GAME_TIME = 60
+UNIT_GAME_TIME = 10
 
 '''flag to check if a game is running or not'''
 IS_GAME_RUNNING = False
@@ -95,7 +95,7 @@ class Window(QtGui.QMainWindow):
         user_words_score = 0
         for word in self.user_words_list:
             user_words_score += self.total_points[word]
-        user_words_count = str(len(self.user_words_list))
+        user_words_count = len(self.user_words_list)
         grid_result = self.get_grid_all()
         text_1 = 'TOTAL WORDS - ' + str(user_words_count) + ' out of ' + grid_result[0]
         text_2 = 'TOTAL SCORE - ' + str(user_words_score) + ' out of ' + grid_result[2]
@@ -223,12 +223,12 @@ class Window(QtGui.QMainWindow):
             post_list.append(neighbor)
         return post_list
     
-    def find_words(self, point, prefix, visited, total_points):
+    def find_words(self, point, prefix, visited):
         visited[point[0]][point[1]] = True
         word = prefix + self.grid[point[0]][point[1]].letter
         if not self.is_prefix(word):
             return
-        total_points[word] = total_points[prefix] + total_points[self.grid[point[0]][point[1]].letter]
+        self.total_points[word] = self.total_points[prefix] + self.total_points[self.grid[point[0]][point[1]].letter]
         if len(word) >= MIN_LENGTH and self.is_word(word) and word not in self.grid_words_list:
             self.grid_words_list.append(word)
         for neighbor in self.get_neighbors(point):
@@ -237,7 +237,7 @@ class Window(QtGui.QMainWindow):
                 for p in range(4):
                     for q in range(4):
                         _visited[p][q] = visited[p][q]
-                self.find_words(neighbor, word, _visited, total_points)
+                self.find_words(neighbor, word, _visited)
                 
     def create_random_grid(self):
         for r in range(4):
@@ -251,7 +251,7 @@ class Window(QtGui.QMainWindow):
         for i in range(4):
             for j in range(4):
                 visited = [[False for r in range(4)] for c in range(4)]
-                self.find_words((i, j), '', visited, self.total_points)
+                self.find_words((i, j), '', visited)
 
     def get_grid_all(self):
         sum_total_points = 0
