@@ -3,12 +3,13 @@ import time
 import cPickle as pickle
 import random
 from PyQt4 import QtGui, QtCore, phonon
+import threading
 from threading import Thread
 from utils import alphabet
 
 MIN_LENGTH = 3
 T = None
-UNIT_GAME_TIME = 10
+UNIT_GAME_TIME = 60
 
 '''flag to check if a game is running or not'''
 IS_GAME_RUNNING = False
@@ -21,6 +22,7 @@ class Window(QtGui.QMainWindow):
         self.initPhonon()
         self.initAll()
         self.current_timer = None
+        self.timer_display_thread = None
 
     def initUI(self):
         layout = QtGui.QBoxLayout(0)
@@ -36,7 +38,7 @@ class Window(QtGui.QMainWindow):
         self.statusbar.showMessage('WORDAMENT!')
         self.setWindowTitle('WORDAMENT')
         self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
-    
+
     def initPhonon(self):
         self.mediaObject = phonon.Phonon.MediaObject(self)
         self._audioOutput = phonon.Phonon.AudioOutput(phonon.Phonon.MusicCategory)
@@ -47,10 +49,11 @@ class Window(QtGui.QMainWindow):
         self.grid_words_list = []
         self.user_words_list = []
         self.total_points = {'':0, }
-
+        
     def gameUI(self):
         self.statusbar.clearMessage()
-        self.main_widget = QtGui.QWidget()
+        self.lcd = QtGui.QLCDNumber()
+        main_widget = QtGui.QWidget()
         layout = QtGui.QGridLayout()
         for row in range(4):
             for col in range(4):
@@ -67,8 +70,9 @@ class Window(QtGui.QMainWindow):
         layout.addWidget(self.textbox, 5, 0, 1, 3)
         layout.addWidget(self.resultbox, 6, 0, 3, 3)
         layout.addWidget(self.btn, 5, 3)
-        self.main_widget.setLayout(layout)
-        self.setCentralWidget(self.main_widget)
+        layout.addWidget(self.lcd, 6, 3, 3, 1)
+        main_widget.setLayout(layout)
+        self.setCentralWidget(main_widget)
         self.textbox.setFocus()
         '''allow the user to play the game for UNIT_GAME_TIME seconds'''
         self.start_timer()
@@ -81,6 +85,10 @@ class Window(QtGui.QMainWindow):
         self.current_timer.timeout.connect(self.stop_game)
         self.current_timer.setSingleShot(True) 
         self.current_timer.start(1000 * UNIT_GAME_TIME)
+        '''display the timer to the user in self.lcd'''
+        self.timer_display_thread = TimerDisplayThread(self.lcd)
+        self.timer_display_thread.setDaemon(True)
+        self.timer_display_thread.start()
 
     def stop_game(self):
         self.mediaObject.setCurrentSource(phonon.Phonon.MediaSource('utils/sounds/alarm.wav'))
@@ -128,7 +136,6 @@ class Window(QtGui.QMainWindow):
                                 buttons = QtGui.QMessageBox.Yes|QtGui.QMessageBox.No)
             if dialog == QtGui.QMessageBox.No:
                 return
-
         self.initAll()
         self.create_random_grid()
         if trie_thread.is_alive():
@@ -180,9 +187,6 @@ class Window(QtGui.QMainWindow):
             self.resultbox.insertPlainText('\n')
 
     def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Escape:
-            self.close()
-
         if event.key() == QtCore.Qt.Key_Enter or event.key() == QtCore.Qt.Key_Return and self.is_game_running():
             self.print_result()
 
@@ -260,9 +264,9 @@ class Window(QtGui.QMainWindow):
         return (str(len(self.grid_words_list)), str(self.grid_words_list), str(sum_total_points))
 
 class TrieThread(Thread):
-    def __init__(self, name):
+    def __init__(self, name=None):
         Thread.__init__(self, name=name)
-    
+
     def run(self):
         global T
         if T is None:
@@ -271,9 +275,26 @@ class TrieThread(Thread):
         print 'trie created'
         trie_read.close()
 
+class TimerDisplayThread(Thread):
+    def __init__(self, lcd, name=None):
+        Thread.__init__(self, name=name)
+        self.lcd = lcd
+
+    def run(self):
+        self.show_countdown_timer()
+        
+    def show_countdown_timer(self):
+        try:
+            for k in range(UNIT_GAME_TIME-1, -1, -1):
+                self.lcd.display(k)
+                time.sleep(1)
+        except RuntimeError:
+            return
+
 def main():
     global trie_thread
     trie_thread = TrieThread('trie loading thread')
+    trie_thread.setDaemon(True)
     trie_thread.start()
     app = QtGui.QApplication(sys.argv)
     window = Window()
