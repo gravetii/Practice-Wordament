@@ -95,7 +95,6 @@ class Window(QtGui.QMainWindow):
             self.mediaObject.setCurrentSource(phonon.Phonon.MediaSource('utils/sounds/alarm.wav'))
             self.mediaObject.play()
         self.game_running = False
-        print 'TIME UP!'
         self.textbox.setReadOnly(True)
         self.statusbar.showMessage('TIME UP!')
         
@@ -145,10 +144,8 @@ class Window(QtGui.QMainWindow):
         for word in self.grid_words_list:
             formatted_word = word + ': ' + str(self.total_points[word])
             if word in self.user_words_list:
-                '''print in green'''
                 self.print_colored_text(formatted_word, 'green')
             else:
-                '''print in black'''
                 self.print_colored_text(formatted_word, 'black')
         self.current_grid_words_action.setDisabled(True)
         self.display_user_result()
@@ -167,10 +164,6 @@ class Window(QtGui.QMainWindow):
 
         '''get the list of meaningful words from this grid'''
         self.get_all_grid_words()
-
-        print 'Total number of words: ' + str(len(self.grid_words_list))
-        print 'Words List: ' + str(self.grid_words_list)
-        print 'Total sum of grid words: ' + str(self.sum_total_points)
         self.game_running = True
         self.statusbar.showMessage('Starting new game...')
         
@@ -200,7 +193,6 @@ class Window(QtGui.QMainWindow):
             self.print_colored_text(result_string, 'green')
             self.user_words_list.append(text)
             self.sum_user_points += self.total_points[text]
-            print text
         elif text in self.user_words_list:
             self.print_colored_text(text, 'orange')
         elif text not in self.grid_words_list:
@@ -286,7 +278,6 @@ class TrieThread(Thread):
         if T is None:
             trie_read = open('utils/trie_dump.pkl', 'r+')
             T = pickle.load(trie_read)
-        print 'trie created'
         trie_read.close()
 
 class TimerDisplayThread(Thread):

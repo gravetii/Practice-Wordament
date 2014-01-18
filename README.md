@@ -1,4 +1,4 @@
-wordament
+PracticeWordament
 =========
 
-Implementation of the popular word game Wordament in Python.
+A mimic of the popular word game Wordament published by Microsoft Studios
