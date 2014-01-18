@@ -3,13 +3,12 @@ import time
 import cPickle as pickle
 import random
 from PyQt4 import QtGui, QtCore, phonon
-import threading
 from threading import Thread
 from utils import alphabet
 
 MIN_LENGTH = 3
 T = None
-UNIT_GAME_TIME = 60
+UNIT_GAME_TIME = 10
 
 '''flag to check if a game is running or not'''
 IS_GAME_RUNNING = False
@@ -48,9 +47,12 @@ class Window(QtGui.QMainWindow):
         self.grid = [[None for row in range(4)] for col in range(4)]
         self.grid_words_list = []
         self.user_words_list = []
+        self.sum_total_points = 0
+        self.sum_user_points = 0
         self.total_points = {'':0, }
         
     def gameUI(self):
+        self.current_grid_words_action.setDisabled(True)
         self.statusbar.clearMessage()
         self.lcd = QtGui.QLCDNumber()
         main_widget = QtGui.QWidget()
@@ -91,45 +93,64 @@ class Window(QtGui.QMainWindow):
         self.timer_display_thread.start()
 
     def stop_game(self):
-        self.mediaObject.setCurrentSource(phonon.Phonon.MediaSource('utils/sounds/alarm.wav'))
-        self.mediaObject.play()
+        if self.enable_sound.isChecked():
+            self.mediaObject.setCurrentSource(phonon.Phonon.MediaSource('utils/sounds/alarm.wav'))
+            self.mediaObject.play()
         self.set_game_running(False)
         print 'TIME UP!'
         self.textbox.setReadOnly(True)
         self.statusbar.showMessage('TIME UP!')
-        self.display_user_result()
-    
-    def display_user_result(self):
-        user_words_score = 0
-        for word in self.user_words_list:
-            user_words_score += self.total_points[word]
-        user_words_count = len(self.user_words_list)
-        grid_result = self.get_grid_all()
-        text_1 = 'TOTAL WORDS - ' + str(user_words_count) + ' out of ' + grid_result[0]
-        text_2 = 'TOTAL SCORE - ' + str(user_words_score) + ' out of ' + grid_result[2]
         
         dialog = QtGui.QMessageBox.information(self, 'Game over!', 'TIME UP!', 
                                     buttons = QtGui.QMessageBox.Ok|QtGui.QMessageBox.Cancel)
         if dialog == QtGui.QMessageBox.Ok or dialog == QtGui.QMessageBox.Cancel:
-            self.statusbar.showMessage(text_1 + ' | ' + text_2)
+            self.display_user_result()
+        self.current_grid_words_action.setEnabled(True)
+
+    def display_user_result(self):
+        text_1 = 'TOTAL WORDS - ' + str(len(self.user_words_list)) + ' out of ' + str(len(self.grid_words_list))
+        text_2 = 'TOTAL SCORE - ' + str(self.sum_user_points) + ' out of ' + str(self.sum_total_points)
+        self.statusbar.showMessage(text_1 + ' | ' + text_2)
 
     def create_menu(self):
         new_game_action = QtGui.QAction('&New Game', self)
         new_game_action.setShortcut('Ctrl+N')
-        new_game_action.triggered.connect(self.create_new_game)
+        new_game_action.triggered.connect(self.start_new_game)
         exit_action = QtGui.QAction('&Exit', self)
         exit_action.setShortcut('Ctrl+Q')
         exit_action.triggered.connect(self.close)
         about_action = QtGui.QAction('&About', self)
         about_action.triggered.connect(self.show_about)
+        self.current_grid_words_action = QtGui.QAction('&List of words', self)
+        self.current_grid_words_action.setDisabled(True)
+        self.current_grid_words_action.triggered.connect(self.show_current_grid_words)
+        self.enable_sound = QtGui.QAction('&Enable sounds', self, checkable=True)
+        self.enable_sound.setChecked(True)
         menubar = self.menuBar()
         file_menu = menubar.addMenu('&File')
         file_menu.addAction(new_game_action)
+        file_menu.addAction(self.current_grid_words_action)
         file_menu.addAction(exit_action)
+        options_menu = menubar.addMenu('&Options')
+        options_menu.addAction(self.enable_sound)
         help_menu = menubar.addMenu('&Help')
         help_menu.addAction(about_action)
+    
+    def show_current_grid_words(self):
+        '''this is clickable only after the game is over'''
+        self.resultbox.clear()
+        for word in self.grid_words_list:
+            formatted_word = word + ': ' + str(self.total_points[word])
+            if word in self.user_words_list:
+                '''print in green'''
+                self.print_colored_text(formatted_word, 'green')
+            else:
+                '''print in black'''
+                self.print_colored_text(formatted_word, 'black')
+        self.current_grid_words_action.setDisabled(True)
+        self.display_user_result()
 
-    def create_new_game(self):
+    def start_new_game(self):
         if self.is_game_running():
             dialog = QtGui.QMessageBox.question(self, 'Really quit?',
                                                 'Quit this game and start a new one?',
@@ -144,10 +165,9 @@ class Window(QtGui.QMainWindow):
         '''get the list of meaningful words from this grid'''
         self.get_all_grid_words()
 
-        result_list = self.get_grid_all()
-        print 'Total number of words: ' + result_list[0]
-        print 'Words List: ' + result_list[1]
-        print 'Total sum of grid words: ' + result_list[2]
+        print 'Total number of words: ' + str(len(self.grid_words_list))
+        print 'Words List: ' + str(self.grid_words_list)
+        print 'Total sum of grid words: ' + str(self.sum_total_points)
         self.set_game_running(True)
         self.statusbar.showMessage('Starting new game...')
         
@@ -174,17 +194,20 @@ class Window(QtGui.QMainWindow):
 
         if text in self.grid_words_list and text not in self.user_words_list:
             result_string = text + ': ' + str(self.total_points[text])
-            formatted_string = QtCore.QString("<font color='green'>%1</font>").arg(result_string)
-            self.resultbox.insertHtml(formatted_string)
-            self.resultbox.insertPlainText('\n')
+            self.print_colored_text(result_string, 'green')
             self.user_words_list.append(text)
+            self.sum_user_points += self.total_points[text]
             print text
         elif text in self.user_words_list:
-            self.resultbox.insertHtml(QtCore.QString("<font color='orange'>%1</font>").arg(text))
-            self.resultbox.insertPlainText('\n')
+            self.print_colored_text(text, 'orange')
         elif text not in self.grid_words_list:
-            self.resultbox.insertHtml(QtCore.QString("<font color='red'>%1</font>").arg(text))
-            self.resultbox.insertPlainText('\n')
+            self.print_colored_text(text, 'red')
+            
+    def print_colored_text(self, text, color):
+        color_string = "<font color = '" + color + "'>%1</font>"
+        formatted_string = QtCore.QString(color_string).arg(text)
+        self.resultbox.insertHtml(formatted_string)
+        self.resultbox.insertPlainText('\n')
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Enter or event.key() == QtCore.Qt.Key_Return and self.is_game_running():
@@ -235,6 +258,7 @@ class Window(QtGui.QMainWindow):
         self.total_points[word] = self.total_points[prefix] + self.total_points[self.grid[point[0]][point[1]].letter]
         if len(word) >= MIN_LENGTH and self.is_word(word) and word not in self.grid_words_list:
             self.grid_words_list.append(word)
+            self.sum_total_points += self.total_points[word]
         for neighbor in self.get_neighbors(point):
             if not visited[neighbor[0]][neighbor[1]]:
                 _visited = [[False for r in range(4)] for c in range(4)]
@@ -256,12 +280,6 @@ class Window(QtGui.QMainWindow):
             for j in range(4):
                 visited = [[False for r in range(4)] for c in range(4)]
                 self.find_words((i, j), '', visited)
-
-    def get_grid_all(self):
-        sum_total_points = 0
-        for each_word in self.grid_words_list:
-            sum_total_points += self.total_points[each_word]
-        return (str(len(self.grid_words_list)), str(self.grid_words_list), str(sum_total_points))
 
 class TrieThread(Thread):
     def __init__(self, name=None):
