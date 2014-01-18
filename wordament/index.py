@@ -8,10 +8,7 @@ from utils import alphabet
 
 MIN_LENGTH = 3
 T = None
-UNIT_GAME_TIME = 10
-
-'''flag to check if a game is running or not'''
-IS_GAME_RUNNING = False
+UNIT_GAME_TIME = 60
 
 class Window(QtGui.QMainWindow):
     def __init__(self):
@@ -22,6 +19,7 @@ class Window(QtGui.QMainWindow):
         self.initAll()
         self.current_timer = None
         self.timer_display_thread = None
+        self.game_running = False
 
     def initUI(self):
         layout = QtGui.QBoxLayout(0)
@@ -96,7 +94,7 @@ class Window(QtGui.QMainWindow):
         if self.enable_sound.isChecked():
             self.mediaObject.setCurrentSource(phonon.Phonon.MediaSource('utils/sounds/alarm.wav'))
             self.mediaObject.play()
-        self.set_game_running(False)
+        self.game_running = False
         print 'TIME UP!'
         self.textbox.setReadOnly(True)
         self.statusbar.showMessage('TIME UP!')
@@ -151,7 +149,7 @@ class Window(QtGui.QMainWindow):
         self.display_user_result()
 
     def start_new_game(self):
-        if self.is_game_running():
+        if self.game_running:
             dialog = QtGui.QMessageBox.question(self, 'Really quit?',
                                                 'Quit this game and start a new one?',
                                 buttons = QtGui.QMessageBox.Yes|QtGui.QMessageBox.No)
@@ -168,7 +166,7 @@ class Window(QtGui.QMainWindow):
         print 'Total number of words: ' + str(len(self.grid_words_list))
         print 'Words List: ' + str(self.grid_words_list)
         print 'Total sum of grid words: ' + str(self.sum_total_points)
-        self.set_game_running(True)
+        self.game_running = True
         self.statusbar.showMessage('Starting new game...')
         
         '''wait for 1 second before showing the grid to the user'''
@@ -210,18 +208,11 @@ class Window(QtGui.QMainWindow):
         self.resultbox.insertPlainText('\n')
 
     def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Enter or event.key() == QtCore.Qt.Key_Return and self.is_game_running():
+        if event.key() == QtCore.Qt.Key_Enter or event.key() == QtCore.Qt.Key_Return and self.game_running:
             self.print_result()
-
-    def set_game_running(self, flag):
-        global IS_GAME_RUNNING
-        IS_GAME_RUNNING = flag
-        
-    def is_game_running(self):
-        return IS_GAME_RUNNING
     
     def closeEvent(self, event):
-        if self.is_game_running():
+        if self.game_running:
             dialog_text = 'Really quit?', 'Quit current game?'
         else:
             dialog_text = 'Really exit?', 'Are you sure you want to exit?'
