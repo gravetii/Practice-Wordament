@@ -84,14 +84,14 @@ class Window(QtGui.QMainWindow):
         self.current_timer = QtCore.QTimer()
         self.current_timer.timeout.connect(self.stop_game)
         self.current_timer.setSingleShot(True) 
-        self.current_timer.start(1000 * UNIT_GAME_TIME)
+        self.current_timer.start(1000 * (UNIT_GAME_TIME - 1))
         '''display the timer to the user in self.lcd'''
         self.timer_display_thread = TimerDisplayThread(self.lcd)
         self.timer_display_thread.setDaemon(True)
         self.timer_display_thread.start()
 
     def stop_game(self):
-        if self.enable_sound.isChecked():
+        if self.enable_sound_action.isChecked():
             self.mediaObject.setCurrentSource(phonon.Phonon.MediaSource('utils/sounds/alarm.wav'))
             self.mediaObject.play()
         self.game_running = False
@@ -104,6 +104,8 @@ class Window(QtGui.QMainWindow):
         if dialog == QtGui.QMessageBox.Ok or dialog == QtGui.QMessageBox.Cancel:
             self.display_user_result()
         self.current_grid_words_action.setEnabled(True)
+        if self.show_current_grid_words_action.isChecked():
+            self.show_current_grid_words()
 
     def display_user_result(self):
         text_1 = 'TOTAL WORDS - ' + str(len(self.user_words_list)) + ' out of ' + str(len(self.grid_words_list))
@@ -122,15 +124,18 @@ class Window(QtGui.QMainWindow):
         self.current_grid_words_action = QtGui.QAction('&List of words', self)
         self.current_grid_words_action.setDisabled(True)
         self.current_grid_words_action.triggered.connect(self.show_current_grid_words)
-        self.enable_sound = QtGui.QAction('&Enable sounds', self, checkable=True)
-        self.enable_sound.setChecked(True)
+        self.enable_sound_action = QtGui.QAction('&Enable sounds', self, checkable=True)
+        self.enable_sound_action.setChecked(True)
+        self.show_current_grid_words_action = QtGui.QAction('&Show all possible words after game', self, checkable=True)
+        self.show_current_grid_words_action.setChecked(True)
         menubar = self.menuBar()
         file_menu = menubar.addMenu('&File')
         file_menu.addAction(new_game_action)
         file_menu.addAction(self.current_grid_words_action)
         file_menu.addAction(exit_action)
         options_menu = menubar.addMenu('&Options')
-        options_menu.addAction(self.enable_sound)
+        options_menu.addAction(self.enable_sound_action)
+        options_menu.addAction(self.show_current_grid_words_action)
         help_menu = menubar.addMenu('&Help')
         help_menu.addAction(about_action)
     
