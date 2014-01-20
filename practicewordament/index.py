@@ -14,6 +14,8 @@ UNIT_GAME_TIME = 60
 class Window(QtGui.QMainWindow):
     def __init__(self):
         super(Window, self).__init__()
+        self.UILayout = QtGui.QBoxLayout(0)
+        self.gameLayout = QtGui.QGridLayout()
         self.create_menu()
         self.initUI()
         self.initPhonon()
@@ -21,14 +23,14 @@ class Window(QtGui.QMainWindow):
         self.current_timer = None
         self.timer_display_thread = None
         self.game_running = False
+        
 
     def initUI(self):
-        layout = QtGui.QBoxLayout(0)
         skin_path = 'utils/images/skins/' + str(random.choice([1, 2, 3])) + '.jpg'
         pixmap = QtGui.QPixmap(skin_path)
         self.label = QtGui.QLabel(self)
         self.label.setPixmap(pixmap.scaled(425, 575))
-        layout.addWidget(self.label)
+        self.UILayout.addWidget(self.label)
         self.setCentralWidget(self.label)
         self.move(350, 100)
         self.setFixedSize(425, 575)
@@ -36,6 +38,12 @@ class Window(QtGui.QMainWindow):
         self.statusbar.showMessage('WORDAMENT!')
         self.setWindowTitle('WORDAMENT')
         self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
+        
+    def remove_initUI(self):
+        for c in reversed(range(self.UILayout.count())):
+            widget = self.UILayout.takeAt(c).widget()
+            if widget is not None: 
+                widget.deleteLater()
 
     def initPhonon(self):
         self.mediaObject = phonon.Phonon.MediaObject(self)
@@ -43,7 +51,7 @@ class Window(QtGui.QMainWindow):
         phonon.Phonon.createPath(self.mediaObject, self._audioOutput)
         
     def initAll(self):
-        self.grid = [[None for row in range(4)] for col in range(4)]
+        self.grid = [[None for _ in range(4)] for _ in range(4)]
         self.grid_words_list = []
         self.user_words_list = []
         self.sum_total_points = 0
@@ -55,29 +63,34 @@ class Window(QtGui.QMainWindow):
         self.statusbar.clearMessage()
         self.lcd = QtGui.QLCDNumber()
         main_widget = QtGui.QWidget()
-        layout = QtGui.QGridLayout()
         for row in range(4):
             for col in range(4):
                 label = QtGui.QLabel(self)
                 letter = self.grid[row][col]
                 pixmap = QtGui.QPixmap(letter.image)
                 label.setPixmap(pixmap.scaled(100, 100))
-                layout.addWidget(label, row, col)
+                self.gameLayout.addWidget(label, row, col)
         self.textbox = QtGui.QLineEdit(self)
         self.resultbox = QtGui.QTextEdit(self)
         self.resultbox.setReadOnly(True)
         self.btn = QtGui.QPushButton('Send', self)
         self.btn.clicked.connect(self.print_result)
-        layout.addWidget(self.textbox, 5, 0, 1, 3)
-        layout.addWidget(self.resultbox, 6, 0, 3, 3)
-        layout.addWidget(self.btn, 5, 3)
-        layout.addWidget(self.lcd, 6, 3, 3, 1)
-        main_widget.setLayout(layout)
+        self.gameLayout.addWidget(self.textbox, 5, 0, 1, 3)
+        self.gameLayout.addWidget(self.resultbox, 6, 0, 3, 3)
+        self.gameLayout.addWidget(self.btn, 5, 3)
+        self.gameLayout.addWidget(self.lcd, 6, 3, 3, 1)
+        main_widget.setLayout(self.gameLayout)
         self.setCentralWidget(main_widget)
         self.textbox.setFocus()
         '''allow the user to play the game for UNIT_GAME_TIME seconds'''
         self.start_timer()
     
+    def remove_gameUI(self):
+        for c in reversed(range(self.gameLayout.count())):
+            widget = self.gameLayout.takeAt(c).widget()
+            if widget is not None: 
+                widget.deleteLater()
+
     def start_timer(self):
         if self.current_timer:
             self.current_timer.stop()
@@ -170,6 +183,10 @@ class Window(QtGui.QMainWindow):
         
         '''wait for 1 second before showing the grid to the user'''
         time.sleep(1)
+        if self.UILayout.count() is not 0:
+            self.remove_initUI()
+        if self.gameLayout.count() is not 0:
+            self.remove_gameUI()
         self.gameUI()
     
     def show_about(self):
@@ -250,7 +267,7 @@ class Window(QtGui.QMainWindow):
             self.sum_total_points += self.total_points[word]
         for neighbor in self.get_neighbors(point):
             if not visited[neighbor[0]][neighbor[1]]:
-                _visited = [[False for r in range(4)] for c in range(4)]
+                _visited = [[False for _ in range(4)] for _ in range(4)]
                 for p in range(4):
                     for q in range(4):
                         _visited[p][q] = visited[p][q]
@@ -267,7 +284,7 @@ class Window(QtGui.QMainWindow):
     def get_all_grid_words(self):
         for i in range(4):
             for j in range(4):
-                visited = [[False for r in range(4)] for c in range(4)]
+                visited = [[False for _ in range(4)] for _ in range(4)]
                 self.find_words((i, j), '', visited)
 
 class TrieThread(Thread):
@@ -296,7 +313,7 @@ class TimerDisplayThread(Thread):
                 time.sleep(1)
         except RuntimeError:
             return
-        
+    
 def main():
     global trie_thread
     trie_thread = TrieThread('trie loading thread')
