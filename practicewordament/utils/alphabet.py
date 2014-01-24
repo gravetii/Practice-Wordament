@@ -1,8 +1,3 @@
-#from PyQt4 import QtGui, QtCore
-#import random
-#from random import randint
-
-
 _points = {'': 0,
           'a':1,
           'b':3,
@@ -29,15 +24,14 @@ _points = {'': 0,
           'w':4,
           'x':8,
           'y':4,
-          'z':10,
-          'in':6,
-          'es':12,
-          'pr':6, }
+          'z':10,}
 
-_alphabet = ['b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'p', 'q', 'r', 't'] * 9 + \
-            ['n', 's'] * 15 + \
-            ['a', 'e', 'i', 'o', 'u'] * 25 + \
-            ['v', 'w', 'x', 'y', 'z'] * 6
+_alphabet = ['e'] * 25 + \
+            ['t', 'a', 'o', 'i'] * 20 + \
+            ['n', 's', 'h', 'r'] * 15 + \
+            ['d', 'l', 'c', 'u', 'm'] * 12 + \
+            ['w', 'f', 'g', 'y', 'p', 'b'] * 10 + \
+            ['v', 'k', 'j', 'x', 'q', 'z'] * 5
 
 class Alphabet(object):
     def __init__(self, letter):

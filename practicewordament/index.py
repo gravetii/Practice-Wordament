@@ -10,6 +10,7 @@ from utils import alphabet
 MIN_LENGTH = 3
 T = None
 UNIT_GAME_TIME = 60
+MIN_WORDS = 55
 
 class Window(QtGui.QMainWindow):
     def __init__(self):
@@ -19,11 +20,9 @@ class Window(QtGui.QMainWindow):
         self.create_menu()
         self.initUI()
         self.initPhonon()
-        self.initAll()
         self.current_timer = None
         self.timer_display_thread = None
         self.game_running = False
-        
 
     def initUI(self):
         skin_path = 'utils/images/skins/' + str(random.choice([1, 2, 3])) + '.jpg'
@@ -42,7 +41,7 @@ class Window(QtGui.QMainWindow):
     def remove_initUI(self):
         for c in reversed(range(self.UILayout.count())):
             widget = self.UILayout.takeAt(c).widget()
-            if widget is not None: 
+            if widget != None: 
                 widget.deleteLater()
 
     def initPhonon(self):
@@ -88,7 +87,7 @@ class Window(QtGui.QMainWindow):
     def remove_gameUI(self):
         for c in reversed(range(self.gameLayout.count())):
             widget = self.gameLayout.takeAt(c).widget()
-            if widget is not None: 
+            if widget != None: 
                 widget.deleteLater()
 
     def start_timer(self):
@@ -98,7 +97,7 @@ class Window(QtGui.QMainWindow):
         self.current_timer = QtCore.QTimer()
         self.current_timer.timeout.connect(self.stop_game)
         self.current_timer.setSingleShot(True) 
-        self.current_timer.start(1000 * (UNIT_GAME_TIME - 1))
+        self.current_timer.start(1000 * (UNIT_GAME_TIME))
         '''display the timer to the user in self.lcd'''
         self.timer_display_thread = TimerDisplayThread(self.lcd)
         self.timer_display_thread.setDaemon(True)
@@ -110,8 +109,7 @@ class Window(QtGui.QMainWindow):
             self.mediaObject.play()
         self.game_running = False
         self.textbox.setReadOnly(True)
-        self.statusbar.showMessage('TIME UP!')
-        
+        self.statusbar.showMessage('Game over')
         dialog = QtGui.QMessageBox.information(self, 'Game over!', 'TIME UP!', 
                                     buttons = QtGui.QMessageBox.Ok|QtGui.QMessageBox.Cancel)
         if dialog == QtGui.QMessageBox.Ok or dialog == QtGui.QMessageBox.Cancel:
@@ -123,7 +121,10 @@ class Window(QtGui.QMainWindow):
     def display_user_result(self):
         text_1 = 'TOTAL WORDS - ' + str(len(self.user_words_list)) + ' out of ' + str(len(self.grid_words_list))
         text_2 = 'TOTAL SCORE - ' + str(self.sum_user_points) + ' out of ' + str(self.sum_total_points)
-        self.statusbar.showMessage(text_1 + ' | ' + text_2)
+        self.move_cursor(to_start=True)
+        self.print_colored_text(text_1, 'green')
+        self.print_colored_text(text_2, 'green')
+        self.resultbox.insertPlainText('\n')
 
     def create_menu(self):
         new_game_action = QtGui.QAction('&New Game', self)
@@ -134,7 +135,7 @@ class Window(QtGui.QMainWindow):
         exit_action.triggered.connect(self.close)
         about_action = QtGui.QAction('&About', self)
         about_action.triggered.connect(self.show_about)
-        self.current_grid_words_action = QtGui.QAction('&List of words', self)
+        self.current_grid_words_action = QtGui.QAction('&List all words', self)
         self.current_grid_words_action.setDisabled(True)
         self.current_grid_words_action.triggered.connect(self.show_current_grid_words)
         self.enable_sound_action = QtGui.QAction('&Enable sounds', self, checkable=True)
@@ -171,22 +172,20 @@ class Window(QtGui.QMainWindow):
                                 buttons = QtGui.QMessageBox.Yes|QtGui.QMessageBox.No)
             if dialog == QtGui.QMessageBox.No:
                 return
+        
         self.initAll()
-        self.create_random_grid()
+        self.statusbar.showMessage('Starting new game...')
         if trie_thread.is_alive():
             trie_thread.join()
-
-        '''get the list of meaningful words from this grid'''
-        self.get_all_grid_words()
-        self.game_running = True
-        self.statusbar.showMessage('Starting new game...')
+        self.create_random_grid()
         
-        '''wait for 1 second before showing the grid to the user'''
-        time.sleep(1)
-        if self.UILayout.count() is not 0:
+        self.game_running = True
+
+        if self.UILayout.count() != 0:
             self.remove_initUI()
-        if self.gameLayout.count() is not 0:
+        if self.gameLayout.count() != 0:
             self.remove_gameUI()
+        time.sleep(0.3)
         self.gameUI()
     
     def show_about(self):
@@ -200,11 +199,8 @@ class Window(QtGui.QMainWindow):
         text = str(self.textbox.text()).strip().lower()
         self.textbox.clear()
         if text == '': return
-        
-        '''move cursor to the beginning of resultbox'''
-        cursor = self.resultbox.textCursor()
-        cursor.movePosition(QtGui.QTextCursor.Start)
-        self.resultbox.setTextCursor(cursor)
+
+        self.move_cursor(to_start=True)
 
         if text in self.grid_words_list and text not in self.user_words_list:
             result_string = text + ': ' + str(self.total_points[text])
@@ -221,6 +217,14 @@ class Window(QtGui.QMainWindow):
         formatted_string = QtCore.QString(color_string).arg(text)
         self.resultbox.insertHtml(formatted_string)
         self.resultbox.insertPlainText('\n')
+
+    def move_cursor(self, to_start=True):
+        cursor = self.resultbox.textCursor()
+        if to_start:
+            cursor.movePosition(QtGui.QTextCursor.Start)
+        else:
+            cursor.movePosition(QtGui.QTextCursor.End)
+        self.resultbox.setTextCursor(cursor)
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Enter or event.key() == QtCore.Qt.Key_Return and self.game_running:
@@ -245,7 +249,7 @@ class Window(QtGui.QMainWindow):
     
     def is_prefix(self, prefix):
         a = T.keys(prefix = prefix)
-        return len(a) is not 0
+        return len(a) != 0
     
     def get_neighbors(self, point):
         (x, y) = (point[0], point[1])
@@ -256,7 +260,7 @@ class Window(QtGui.QMainWindow):
             post_list.append(neighbor)
         return post_list
     
-    def find_words(self, point, prefix, visited):
+    def find_words(self, point, prefix, visited, ):
         visited[point[0]][point[1]] = True
         word = prefix + self.grid[point[0]][point[1]].letter
         if not self.is_prefix(word):
@@ -274,18 +278,23 @@ class Window(QtGui.QMainWindow):
                 self.find_words(neighbor, word, _visited)
                 
     def create_random_grid(self):
-        for r in range(4):
-            for c in range(4):
-                random_letter = random.choice(alphabet._alphabet)
-                letter = alphabet.Alphabet(random_letter)
-                self.grid[r][c] = letter
-                self.total_points[random_letter] = letter.points
+        grid_total_words = 0
+        while grid_total_words <= MIN_WORDS:
+            self.initAll()
+            for r in range(4):
+                for c in range(4):
+                    random_letter = random.choice(alphabet._alphabet)
+                    letter = alphabet.Alphabet(random_letter)
+                    self.grid[r][c] = letter
+                    self.total_points[random_letter] = letter.points
+            grid_total_words = self.get_all_grid_words()
 
     def get_all_grid_words(self):
         for i in range(4):
             for j in range(4):
                 visited = [[False for _ in range(4)] for _ in range(4)]
                 self.find_words((i, j), '', visited)
+        return len(self.grid_words_list)
 
 class TrieThread(Thread):
     def __init__(self, name=None):
@@ -293,7 +302,7 @@ class TrieThread(Thread):
 
     def run(self):
         global T
-        if T is None:
+        if T == None:
             trie_read = open('utils/trie_dump.pkl', 'r+')
             T = pickle.load(trie_read)
         trie_read.close()
@@ -308,7 +317,7 @@ class TimerDisplayThread(Thread):
         
     def show_countdown_timer(self):
         try:
-            for k in range(UNIT_GAME_TIME-1, -1, -1):
+            for k in range(UNIT_GAME_TIME, -1, -1):
                 self.lcd.display(k)
                 time.sleep(1)
         except RuntimeError:
