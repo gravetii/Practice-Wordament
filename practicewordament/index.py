@@ -9,7 +9,7 @@ from utils import alphabet
 
 MIN_LENGTH = 3
 T = None
-UNIT_GAME_TIME = 60
+UNIT_GAME_TIME = 10
 MIN_WORDS = 55
 
 class Window(QtGui.QMainWindow):
@@ -100,8 +100,6 @@ class Window(QtGui.QMainWindow):
         self.current_timer.start(1000 * (UNIT_GAME_TIME))
         '''display the timer to the user in self.lcd'''
         self.timer_display_thread = TimerDisplayThread(self.lcd)
-        self.timer_display_thread.setDaemon(True)
-        self.timer_display_thread.start()
 
     def stop_game(self):
         if self.enable_sound_action.isChecked():
@@ -299,6 +297,8 @@ class Window(QtGui.QMainWindow):
 class TrieThread(Thread):
     def __init__(self, name=None):
         Thread.__init__(self, name=name)
+        self.setDaemon(True)
+        self.start()
 
     def run(self):
         global T
@@ -311,6 +311,8 @@ class TimerDisplayThread(Thread):
     def __init__(self, lcd, name=None):
         Thread.__init__(self, name=name)
         self.lcd = lcd
+        self.setDaemon(True)
+        self.start()
 
     def run(self):
         self.show_countdown_timer()
@@ -326,8 +328,6 @@ class TimerDisplayThread(Thread):
 def main():
     global trie_thread
     trie_thread = TrieThread('trie loading thread')
-    trie_thread.setDaemon(True)
-    trie_thread.start()
     app = QtGui.QApplication(sys.argv)
     window = Window()
     window.show()
