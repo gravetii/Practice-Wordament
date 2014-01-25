@@ -9,7 +9,7 @@ from utils import alphabet
 
 MIN_LENGTH = 3
 T = None
-UNIT_GAME_TIME = 10
+UNIT_GAME_TIME = 60
 MIN_WORDS = 55
 
 class Window(QtGui.QMainWindow):
