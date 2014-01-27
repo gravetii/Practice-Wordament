@@ -36,7 +36,7 @@ alphabet = ['e'] * 25 + \
 class Alphabet(object):
     def __init__(self, letter):
         self.letter = letter
-        '''image path wrt to index.py'''
+        '''image path wrt to practicewordament.py'''
         self.image = 'utils/images/alphabet'  + '/' + self.letter + '.png'
         self.points = _points[self.letter]
 

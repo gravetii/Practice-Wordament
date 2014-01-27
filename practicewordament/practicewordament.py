@@ -10,7 +10,7 @@ from utils.utils import *
 
 MIN_LENGTH = 3
 T = None
-UNIT_GAME_TIME = 60
+UNIT_GAME_TIME = 10
 MIN_WORDS = 60
 IS_APP_RUNNING = False
 
