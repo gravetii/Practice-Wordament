@@ -10,7 +10,7 @@ from utils.utils import *
 
 MIN_LENGTH = 3
 T = None
-UNIT_GAME_TIME = 10
+UNIT_GAME_TIME = 60
 WORDS_LOW = 60
 WORDS_HIGH = 80
 MAX_QUEUE_SIZE = 5
