@@ -11,8 +11,8 @@ from utils.utils import *
 MIN_LENGTH = 3
 T = None
 UNIT_GAME_TIME = 60
-WORDS_LOW = 60
-WORDS_HIGH = 80
+WORDS_LOW = 65
+WORDS_HIGH = 90
 MAX_QUEUE_SIZE = 5
 IS_APP_RUNNING = False
 
