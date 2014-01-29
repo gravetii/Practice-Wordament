@@ -44,7 +44,6 @@ class GameThread(Thread):
         self.parent.game_queue.push(new_game, to_start=to_start)
 
     def is_word(self, word):
-        global T
         return T.longest_prefix(word, False) == word
     
     def is_prefix(self, prefix):
@@ -110,7 +109,6 @@ class Window(QtGui.QMainWindow):
         global IS_APP_RUNNING
         IS_APP_RUNNING = True
         self.game_queue = GameQueue()
-        self.game_queue_2 = GameQueue()
         self.statusbar = self.statusBar()
         self.statusbar.showMessage('Please wait...initializing...')
         GameThread(self)
@@ -342,7 +340,7 @@ class TrieThread(Thread):
     def run(self):
         global T
         if T == None:
-            trie_read = open('utils/trie_dump.pkl', 'r+')
+            trie_read = open('utils/words.dump', 'r+')
             T = pickle.load(trie_read)
         trie_read.close()
 
