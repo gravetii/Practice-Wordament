@@ -10,8 +10,10 @@ from utils.utils import *
 
 MIN_LENGTH = 3
 T = None
-UNIT_GAME_TIME = 60
-MIN_WORDS = 60
+UNIT_GAME_TIME = 10
+WORDS_LOW = 60
+WORDS_HIGH = 80
+MAX_QUEUE_SIZE = 5
 IS_APP_RUNNING = False
 
 class GameThread(Thread):
@@ -26,13 +28,20 @@ class GameThread(Thread):
             trie_thread.join()
         global IS_APP_RUNNING
         while True:
-            while IS_APP_RUNNING and self.parent.game_queue.size >= 2:
+            while IS_APP_RUNNING and self.parent.game_queue.size >= MAX_QUEUE_SIZE:
                 time.sleep(1)
             if not IS_APP_RUNNING: break
             self.create_random_grid()
             new_game = Game(self.grid, self.grid_words_list, self.sum_total_points, self.total_points)
-            self.parent.game_queue.push(new_game)
+            self.push_game(new_game)
             self.parent.statusbar.clearMessage()
+        
+    def push_game(self, new_game):
+        if len(self.grid_words_list) > WORDS_HIGH:
+            to_start = True
+        else:
+            to_start = False
+        self.parent.game_queue.push(new_game, to_start=to_start)
 
     def is_word(self, word):
         global T
@@ -78,7 +87,7 @@ class GameThread(Thread):
 
     def create_random_grid(self):
         grid_total_words = 0
-        while grid_total_words <= MIN_WORDS:
+        while grid_total_words <= WORDS_LOW:
             self.initAll()
             for r in range(4):
                 for c in range(4):
@@ -101,6 +110,7 @@ class Window(QtGui.QMainWindow):
         global IS_APP_RUNNING
         IS_APP_RUNNING = True
         self.game_queue = GameQueue()
+        self.game_queue_2 = GameQueue()
         self.statusbar = self.statusBar()
         self.statusbar.showMessage('Please wait...initializing...')
         GameThread(self)
@@ -129,7 +139,7 @@ class Window(QtGui.QMainWindow):
     def remove_initUI(self):
         for c in reversed(range(self.UILayout.count())):
             widget = self.UILayout.takeAt(c).widget()
-            if widget != None: 
+            if widget: 
                 widget.deleteLater()
 
     def initPhonon(self):
@@ -167,7 +177,7 @@ class Window(QtGui.QMainWindow):
     def remove_gameUI(self):
         for c in reversed(range(self.gameLayout.count())):
             widget = self.gameLayout.takeAt(c).widget()
-            if widget != None: 
+            if widget:
                 widget.deleteLater()
 
     def start_timer(self):
@@ -265,7 +275,7 @@ class Window(QtGui.QMainWindow):
             self.current_game = self.game_queue.pop()
             time.sleep(1)
         self.gameUI()
-    
+
     def show_about(self):
         dialog_text = 'Written by Sandeep Dasika in a desperate attempt to do something productive.'
         dialog = QtGui.QMessageBox.information(self, "About", dialog_text, 

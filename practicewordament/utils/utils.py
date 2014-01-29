@@ -57,8 +57,11 @@ class GameQueue:
         self._list = []
         self._len = 0
 
-    def push(self, obj):
-        self._list.append(obj)
+    def push(self, obj, to_start=False):
+        if to_start:
+            self._list.insert(0, obj)
+        else:
+            self._list.append(obj)
         self._len += 1
     
     def empty(self):
