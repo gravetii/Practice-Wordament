@@ -34,6 +34,9 @@ alphabet = ['e'] * 25 + \
            ['v', 'k', 'j', 'x', 'q', 'z'] * 5
 
 class Alphabet(object):
+    """
+    class: Alphabet class, the objects of which are stored in the grid.
+    """
     def __init__(self, letter):
         self.letter = letter
         '''image path wrt to practicewordament.py'''
@@ -41,6 +44,9 @@ class Alphabet(object):
         self.points = _points[self.letter]
 
 class Game:
+    """
+    class: Represents a game.
+    """
     def __init__(self, grid, grid_words_list, sum_total_points, total_points):
         self.grid = [[None for _ in range(4)] for _ in range(4)]
         for r in range(4):
@@ -53,6 +59,9 @@ class Game:
         self.sum_user_points = 0
     
 class GameQueue:
+    """
+    class: Data structure to hold the games created.
+    """
     def __init__(self):
         self._list = []
         self._len = 0
