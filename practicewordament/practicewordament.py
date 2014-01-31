@@ -261,6 +261,7 @@ class Window(QtGui.QMainWindow):
         self.current_grid_words_action.setEnabled(True)
         if self.show_current_grid_words_action.isChecked():
             self.show_current_grid_words()
+        self.resultbox.setFocus()
 
     def display_user_result(self):
         """
