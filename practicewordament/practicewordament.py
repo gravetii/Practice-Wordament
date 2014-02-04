@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import os
 import sys
 import time
 import cPickle as pickle
@@ -9,7 +9,6 @@ from threading import Thread
 from utils.utils import *
 
 MIN_LENGTH = 3
-T = None
 UNIT_GAME_TIME = 60
 WORDS_LOW = 65
 WORDS_HIGH = 90
@@ -164,7 +163,7 @@ class Window(QtGui.QMainWindow):
         """
         method: Creates the initial UI.
         """
-        skin_path = 'utils/images/skins/' + str(random.choice([1, 2, 3])) + '.jpg'
+        skin_path = os.path.join(os.path.dirname(__file__), 'utils/images/skins/') + str(random.choice([1, 2, 3])) + '.jpg'
         pixmap = QtGui.QPixmap(skin_path)
         self.label = QtGui.QLabel(self)
         self.label.setPixmap(pixmap.scaled(425, 575))
@@ -173,7 +172,6 @@ class Window(QtGui.QMainWindow):
         self.move(350, 100)
         self.setFixedSize(425, 575)
         self.setWindowTitle('PRACTICE WORDAMENT')
-        self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
         
     def remove_initUI(self):
         """
@@ -240,7 +238,7 @@ class Window(QtGui.QMainWindow):
         self.current_timer = QtCore.QTimer()
         self.current_timer.timeout.connect(self.stop_game)
         self.current_timer.setSingleShot(True) 
-        self.current_timer.start(1000 * (UNIT_GAME_TIME))
+        self.current_timer.start(1000 * UNIT_GAME_TIME)
         '''display the timer to the user in self.lcd'''
         self.timer_display_thread = TimerDisplayThread(self.lcd)
 
@@ -249,7 +247,8 @@ class Window(QtGui.QMainWindow):
         method: Stops the currently running game.
         """
         if self.enable_sound_action.isChecked():
-            self.mediaObject.setCurrentSource(phonon.Phonon.MediaSource('utils/sounds/alarm.wav'))
+            sound_path = os.path.join(os.path.dirname(__file__), 'utils/sounds/alarm.wav')
+            self.mediaObject.setCurrentSource(phonon.Phonon.MediaSource(sound_path))
             self.mediaObject.play()
         self.game_running = False
         self.textbox.setReadOnly(True)
@@ -435,10 +434,9 @@ class LoadWordsThread(Thread):
         method: run() method for the LoadWordsThread class.
         """
         global T
-        if T == None:
-            file_read = open('utils/words.dump', 'r+')
-            T = pickle.load(file_read)
-        file_read.close()
+        file_path = os.path.join(os.path.dirname(__file__), 'utils/words.dump')
+        with open(file_path, 'r+') as f:
+            T = pickle.load(f)
 
 class TimerDisplayThread(Thread):
     """

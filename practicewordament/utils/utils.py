@@ -1,3 +1,4 @@
+import os
 _points = {'': 0,
           'a':1,
           'b':3,
@@ -31,7 +32,8 @@ alphabet = ['e'] * 25 + \
            ['n', 's', 'h', 'r'] * 15 + \
            ['d', 'l', 'c', 'u', 'm'] * 12 + \
            ['w', 'f', 'g', 'y', 'p', 'b'] * 10 + \
-           ['v', 'k', 'j', 'x', 'q', 'z'] * 5
+           ['v', 'k', 'j'] * 5 + \
+           ['x', 'q', 'z'] * 2
 
 class Alphabet(object):
     """
@@ -40,7 +42,8 @@ class Alphabet(object):
     def __init__(self, letter):
         self.letter = letter
         '''image path wrt to practicewordament.py'''
-        self.image = 'utils/images/alphabet'  + '/' + self.letter + '.png'
+        image_path = os.path.join(os.path.dirname(__file__), 'images/alphabet/')
+        self.image = image_path + self.letter + '.png'
         self.points = _points[self.letter]
 
 class Game:
