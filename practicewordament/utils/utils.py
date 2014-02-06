@@ -51,10 +51,7 @@ class Game:
     class: Represents a game.
     """
     def __init__(self, grid, grid_words_list, sum_total_points, total_points):
-        self.grid = [[None for _ in range(4)] for _ in range(4)]
-        for r in range(4):
-            for c in range(4):
-                self.grid[r][c] = grid[r][c]
+        self.grid = [x[:] for x in grid]
         self.grid_words_list = grid_words_list
         self.sum_total_points = sum_total_points
         self.total_points = total_points

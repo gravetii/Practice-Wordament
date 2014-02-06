@@ -92,12 +92,9 @@ class GameThread(Thread):
             self.sum_total_points += self.total_points[word]
         for neighbor in self.get_neighbors(point):
             if not visited[neighbor[0]][neighbor[1]]:
-                _visited = [[False for _ in range(4)] for _ in range(4)]
-                for p in range(4):
-                    for q in range(4):
-                        _visited[p][q] = visited[p][q]
+                _visited = [x[:] for x in visited]
                 self.find_words(neighbor, word, _visited)
-                
+
     def initAll(self):
         """
         method: Initializes all the game variables before creating a new game.

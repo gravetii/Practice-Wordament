@@ -4,7 +4,7 @@ except ImportError:
     from distutils.core import setup
 
 setup(
-      name = 'Practice Wordament',
+      name = 'PracticeWordament',
       version = '1.0',
       author = 'Sandeep Dasika',
       author_email = 'dasika.sandy@gmail.com',
