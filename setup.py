@@ -9,7 +9,7 @@ setup(
       author = 'Sandeep Dasika',
       author_email = 'dasika.sandy@gmail.com',
       packages = ['practicewordament', 'practicewordament.utils',],
-      url = 'http://pypi.python.org/gravetii/PracticeWordament',
+      url = 'http://github.com/gravetii/PracticeWordament',
       license = open('LICENSE.txt').read(),
       description = 'A mimic of the popular word game Wordament',
       long_description = open('README.md').read(),
