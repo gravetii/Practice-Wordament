@@ -18,3 +18,5 @@ Usage
     - `from practicewordament import *`
     - `start()`
 - Make as many words as you can in the allotted time of 60 seconds
+
+If at all you are interested in the details of the implementation, you can have a look at my [blog post](http://gravetii.github.io/articles/practice-wordament/).
